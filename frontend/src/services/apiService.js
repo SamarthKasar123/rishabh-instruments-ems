@@ -89,6 +89,10 @@ class ApiService {
     return this.api.put('/auth/change-password', passwordData);
   }
 
+  getUsers() {
+    return this.api.get('/auth/users');
+  }
+
   // Dashboard endpoints
   getDashboardOverview() {
     return this.api.get('/dashboard/overview');

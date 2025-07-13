@@ -102,6 +102,9 @@ router.get('/:id', auth, async (req, res) => {
 // Create new maintenance record
 router.post('/', auth, authorize('admin', 'manager'), async (req, res) => {
   try {
+    console.log('Raw request body:', req.body);
+    console.log('User info:', req.user);
+
     const maintenanceData = {
       ...req.body,
       createdBy: req.user._id
@@ -114,6 +117,15 @@ router.post('/', auth, authorize('admin', 'manager'), async (req, res) => {
       nextDueDate.setDate(nextDueDate.getDate() + maintenanceData.frequencyDays);
       maintenanceData.nextDueDate = nextDueDate;
     }
+
+    // Manually generate maintenanceId before creating the document
+    if (!maintenanceData.maintenanceId) {
+      const count = await Maintenance.countDocuments();
+      maintenanceData.maintenanceId = `MAINT-${String(count + 1).padStart(6, '0')}`;
+      console.log('Generated maintenanceId in route:', maintenanceData.maintenanceId);
+    }
+
+    console.log('Final maintenance data before save:', maintenanceData);
 
     const maintenance = new Maintenance(maintenanceData);
     await maintenance.save();

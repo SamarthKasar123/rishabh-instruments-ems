@@ -42,26 +42,32 @@ import {
   Warning as WarningIcon,
   Error as ErrorIcon,
   Assignment as TaskIcon,
+  PlayArrow as StartIcon,
 } from '@mui/icons-material';
 
 import apiService from '../../services/apiService';
 
 const Maintenance = () => {
   const [maintenanceRecords, setMaintenanceRecords] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
+  const [openViewDialog, setOpenViewDialog] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [formData, setFormData] = useState({
-    equipmentName: '',
-    equipmentId: '',
-    type: 'preventive',
+    machineName: '',
+    machineNo: '',
+    department: 'Digital Other',
+    maintenanceType: 'Preventive',
+    frequency: 'Monthly',
+    frequencyDays: 30,
     description: '',
     scheduledDate: '',
     assignedTo: '',
-    priority: 'medium',
-    estimatedHours: '',
+    priority: 'Medium',
     notes: '',
   });
 
@@ -69,7 +75,35 @@ const Maintenance = () => {
     try {
       setLoading(true);
       const response = await apiService.getMaintenanceRecords();
-      setMaintenanceRecords(response.data.maintenanceRecords || []);
+      let records = response.data.maintenanceRecords || [];
+      
+      // Classify status based on dates, but respect manually set statuses
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      records = records.map(record => {
+        const scheduledDate = new Date(record.scheduledDate);
+        scheduledDate.setHours(0, 0, 0, 0);
+        
+        // Only auto-classify if status is not manually set to specific states
+        if (record.status !== 'Completed' && 
+            record.status !== 'Cancelled' && 
+            record.status !== 'In Progress') {
+          
+          if (scheduledDate > today) {
+            record.status = 'Scheduled';
+          } else if (scheduledDate.getTime() === today.getTime()) {
+            record.status = 'Scheduled';
+          } else {
+            record.status = 'Overdue';
+          }
+        }
+        // If status is 'In Progress', 'Completed', or 'Cancelled', keep it as is
+        
+        return record;
+      });
+      
+      setMaintenanceRecords(records);
     } catch (error) {
       console.error('Error fetching maintenance records:', error);
       setError('Failed to load maintenance records');
@@ -78,37 +112,57 @@ const Maintenance = () => {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const response = await apiService.getUsers();
+      setUsers(response.data.users || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      // Don't show error for users fetch as it's not critical
+    }
+  };
+
   useEffect(() => {
     fetchMaintenanceRecords();
+    fetchUsers();
   }, []);
 
   const handleAddRecord = () => {
     setSelectedRecord(null);
     setFormData({
-      equipmentName: '',
-      equipmentId: '',
-      type: 'preventive',
+      machineName: '',
+      machineNo: '',
+      department: 'Digital Other',
+      maintenanceType: 'Preventive',
+      frequency: 'Monthly',
+      frequencyDays: 30,
       description: '',
       scheduledDate: '',
       assignedTo: '',
-      priority: 'medium',
-      estimatedHours: '',
+      priority: 'Medium',
       notes: '',
     });
     setOpenDialog(true);
   };
 
+  const handleViewRecord = (record) => {
+    setSelectedRecord(record);
+    setOpenViewDialog(true);
+  };
+
   const handleEditRecord = (record) => {
     setSelectedRecord(record);
     setFormData({
-      equipmentName: record.equipmentName || '',
-      equipmentId: record.equipmentId || '',
-      type: record.type || 'preventive',
+      machineName: record.machineName || '',
+      machineNo: record.machineNo || '',
+      department: record.department || 'Digital Other',
+      maintenanceType: record.maintenanceType || 'Preventive',
+      frequency: record.frequency || 'Monthly',
+      frequencyDays: record.frequencyDays || 30,
       description: record.description || '',
       scheduledDate: record.scheduledDate ? new Date(record.scheduledDate).toISOString().split('T')[0] : '',
-      assignedTo: record.assignedTo || '',
-      priority: record.priority || 'medium',
-      estimatedHours: record.estimatedHours || '',
+      assignedTo: record.assignedTo?._id || record.assignedTo || '',
+      priority: record.priority || 'Medium',
       notes: record.notes || '',
     });
     setOpenDialog(true);
@@ -116,57 +170,126 @@ const Maintenance = () => {
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
+    setOpenViewDialog(false);
     setSelectedRecord(null);
+    setError(''); // Clear errors when closing dialog
+    setSuccess(''); // Clear success messages when closing dialog
   };
 
   const handleSubmit = async () => {
     try {
+      // Validate required fields
+      if (!formData.machineName) {
+        setError('Machine name is required');
+        return;
+      }
+      
+      if (!formData.machineNo) {
+        setError('Machine number is required');
+        return;
+      }
+      
+      if (!formData.description) {
+        setError('Description is required');
+        return;
+      }
+      
+      if (!formData.scheduledDate) {
+        setError('Scheduled date is required');
+        return;
+      }
+
+      if (!formData.assignedTo) {
+        setError('Please assign this maintenance task to someone');
+        return;
+      }
+
+      // Transform form data to match backend schema
+      const transformedData = {
+        machineName: formData.machineName,
+        machineNo: formData.machineNo,
+        department: formData.department,
+        maintenanceType: formData.maintenanceType,
+        frequency: formData.frequency,
+        frequencyDays: parseInt(formData.frequencyDays),
+        description: formData.description,
+        scheduledDate: formData.scheduledDate,
+        assignedTo: formData.assignedTo,
+        priority: formData.priority,
+        notes: formData.notes,
+      };
+
+      console.log('Sending maintenance data:', transformedData);
+
       if (selectedRecord) {
-        await apiService.updateMaintenanceRecord(selectedRecord._id, formData);
+        await apiService.updateMaintenanceRecord(selectedRecord._id, transformedData);
       } else {
-        await apiService.createMaintenanceRecord(formData);
+        await apiService.createMaintenanceRecord(transformedData);
       }
       await fetchMaintenanceRecords();
       handleCloseDialog();
+      setError(''); // Clear any previous errors
+      setSuccess('Maintenance task saved successfully!');
+      setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
       console.error('Error saving maintenance record:', error);
-      setError('Failed to save maintenance record');
+      setError('Failed to save maintenance record: ' + (error.response?.data?.message || error.message));
     }
   };
 
   const handleCompleteTask = async (id) => {
     try {
-      await apiService.updateMaintenanceRecord(id, { status: 'completed' });
+      await apiService.updateMaintenanceStatus(id, { 
+        status: 'Completed',
+        notes: 'Task completed successfully'
+      });
       await fetchMaintenanceRecords();
+      setSuccess('Task completed successfully!');
+      setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
       console.error('Error completing task:', error);
-      setError('Failed to complete task');
+      setError('Failed to complete task: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  const handleStartTask = async (id) => {
+    try {
+      await apiService.updateMaintenanceStatus(id, { 
+        status: 'In Progress',
+        notes: 'Task started'
+      });
+      await fetchMaintenanceRecords();
+      setSuccess('Task started successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error) {
+      console.error('Error starting task:', error);
+      setError('Failed to start task: ' + (error.response?.data?.message || error.message));
     }
   };
 
   const getStatusColor = (status) => {
     const colors = {
-      scheduled: 'info',
-      'in-progress': 'warning',
-      completed: 'success',
-      overdue: 'error',
-      cancelled: 'default',
+      'Scheduled': 'info',
+      'In Progress': 'warning',
+      'Completed': 'success',
+      'Overdue': 'error',
+      'Cancelled': 'default',
     };
     return colors[status] || 'default';
   };
 
   const getPriorityColor = (priority) => {
     const colors = {
-      low: 'success',
-      medium: 'info',
-      high: 'warning',
-      critical: 'error',
+      'Low': 'success',
+      'Medium': 'info',
+      'High': 'warning',
+      'Critical': 'error',
     };
     return colors[priority] || 'default';
   };
 
   const getTypeIcon = (type) => {
-    return type === 'preventive' ? <ScheduleIcon /> : <MaintenanceIcon />;
+    return type === 'Preventive' ? <ScheduleIcon /> : <MaintenanceIcon />;
   };
 
   const filterRecordsByTab = () => {
@@ -174,13 +297,13 @@ const Maintenance = () => {
       case 0: // All
         return maintenanceRecords;
       case 1: // Scheduled
-        return maintenanceRecords.filter(r => r.status === 'scheduled');
+        return maintenanceRecords.filter(r => r.status === 'Scheduled');
       case 2: // In Progress
-        return maintenanceRecords.filter(r => r.status === 'in-progress');
+        return maintenanceRecords.filter(r => r.status === 'In Progress');
       case 3: // Completed
-        return maintenanceRecords.filter(r => r.status === 'completed');
+        return maintenanceRecords.filter(r => r.status === 'Completed');
       case 4: // Overdue
-        return maintenanceRecords.filter(r => r.status === 'overdue');
+        return maintenanceRecords.filter(r => r.status === 'Overdue');
       default:
         return maintenanceRecords;
     }
@@ -224,6 +347,12 @@ const Maintenance = () => {
         </Alert>
       )}
 
+      {success && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          {success}
+        </Alert>
+      )}
+
       {/* Summary Cards */}
       <Grid container spacing={3} mb={4}>
         <Grid item xs={12} sm={6} md={3}>
@@ -242,7 +371,7 @@ const Maintenance = () => {
           <Card>
             <CardContent>
               <Typography variant="h4" fontWeight={700} color="warning.main">
-                {maintenanceRecords.filter(r => r.status === 'in-progress').length}
+                {maintenanceRecords.filter(r => r.status === 'In Progress').length}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 In Progress
@@ -254,7 +383,7 @@ const Maintenance = () => {
           <Card>
             <CardContent>
               <Typography variant="h4" fontWeight={700} color="error.main">
-                {maintenanceRecords.filter(r => r.status === 'overdue').length}
+                {maintenanceRecords.filter(r => r.status === 'Overdue').length}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Overdue
@@ -266,7 +395,7 @@ const Maintenance = () => {
           <Card>
             <CardContent>
               <Typography variant="h4" fontWeight={700} color="success.main">
-                {maintenanceRecords.filter(r => r.status === 'completed').length}
+                {maintenanceRecords.filter(r => r.status === 'Completed').length}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Completed
@@ -328,19 +457,19 @@ const Maintenance = () => {
                     <TableRow key={record._id}>
                       <TableCell>
                         <Typography variant="body2" fontWeight={600}>
-                          {record.equipmentName}
+                          {record.machineName}
                         </Typography>
-                        {record.equipmentId && (
+                        {record.machineNo && (
                           <Typography variant="caption" color="text.secondary" display="block">
-                            ID: {record.equipmentId}
+                            ID: {record.machineNo}
                           </Typography>
                         )}
                       </TableCell>
                       <TableCell>
                         <Box display="flex" alignItems="center" gap={1}>
-                          {getTypeIcon(record.type)}
+                          {getTypeIcon(record.maintenanceType)}
                           <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
-                            {record.type}
+                            {record.maintenanceType}
                           </Typography>
                         </Box>
                       </TableCell>
@@ -353,15 +482,22 @@ const Maintenance = () => {
                         <Typography variant="body2">
                           {new Date(record.scheduledDate).toLocaleDateString()}
                         </Typography>
-                        {record.estimatedHours && (
+                        {record.frequency && (
                           <Typography variant="caption" color="text.secondary" display="block">
-                            Est. {record.estimatedHours}h
+                            {record.frequency}
+                          </Typography>
+                        )}
+                        {/* Show visual indicator for overdue tasks */}
+                        {record.status === 'Overdue' && (
+                          <Typography variant="caption" color="error" display="block">
+                            <WarningIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
+                            Overdue
                           </Typography>
                         )}
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {record.assignedTo || 'Not assigned'}
+                          {record.assignedTo?.name || 'Not assigned'}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -381,17 +517,28 @@ const Maintenance = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        <IconButton size="small" onClick={() => handleEditRecord(record)}>
+                        <IconButton size="small" onClick={() => handleViewRecord(record)} title="View Details">
                           <ViewIcon />
                         </IconButton>
-                        <IconButton size="small" onClick={() => handleEditRecord(record)}>
+                        <IconButton size="small" onClick={() => handleEditRecord(record)} title="Edit Task">
                           <EditIcon />
                         </IconButton>
-                        {record.status !== 'completed' && (
+                        {record.status === 'Scheduled' && (
+                          <IconButton 
+                            size="small" 
+                            color="warning"
+                            onClick={() => handleStartTask(record._id)}
+                            title="Start Task"
+                          >
+                            <StartIcon />
+                          </IconButton>
+                        )}
+                        {(record.status === 'In Progress' || record.status === 'Scheduled') && (
                           <IconButton 
                             size="small" 
                             color="success"
                             onClick={() => handleCompleteTask(record._id)}
+                            title="Complete Task"
                           >
                             <CompleteIcon />
                           </IconButton>
@@ -412,51 +559,113 @@ const Maintenance = () => {
           {selectedRecord ? 'Edit Maintenance Task' : 'Schedule New Maintenance'}
         </DialogTitle>
         <DialogContent>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
           <Grid container spacing={3} sx={{ mt: 1 }}>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Equipment Name"
-                value={formData.equipmentName}
-                onChange={(e) => setFormData(prev => ({ ...prev, equipmentName: e.target.value }))}
+                label="Machine Name"
+                value={formData.machineName}
+                onChange={(e) => setFormData(prev => ({ ...prev, machineName: e.target.value }))}
                 required
+                error={!formData.machineName}
+                helperText={!formData.machineName ? 'Machine name is required' : ''}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Equipment ID"
-                value={formData.equipmentId}
-                onChange={(e) => setFormData(prev => ({ ...prev, equipmentId: e.target.value }))}
+                label="Machine Number/ID"
+                value={formData.machineNo}
+                onChange={(e) => setFormData(prev => ({ ...prev, machineNo: e.target.value }))}
+                required
+                error={!formData.machineNo}
+                helperText={!formData.machineNo ? 'Machine number is required' : ''}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Maintenance Type"
                 select
-                value={formData.type}
-                onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
+                label="Department"
+                value={formData.department}
+                onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
                 required
               >
-                <MenuItem value="preventive">Preventive</MenuItem>
-                <MenuItem value="corrective">Corrective</MenuItem>
-                <MenuItem value="emergency">Emergency</MenuItem>
+                <MenuItem value="CAM Switch">CAM Switch</MenuItem>
+                <MenuItem value="Transducer">Transducer</MenuItem>
+                <MenuItem value="MID">MID</MenuItem>
+                <MenuItem value="MFM">MFM</MenuItem>
+                <MenuItem value="PQ">PQ</MenuItem>
+                <MenuItem value="EQ">EQ</MenuItem>
+                <MenuItem value="MDI">MDI</MenuItem>
+                <MenuItem value="CT">CT</MenuItem>
+                <MenuItem value="SMT">SMT</MenuItem>
+                <MenuItem value="Digital Other">Digital Other</MenuItem>
+                <MenuItem value="Discrete">Discrete</MenuItem>
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Priority"
                 select
+                label="Maintenance Type"
+                value={formData.maintenanceType}
+                onChange={(e) => setFormData(prev => ({ ...prev, maintenanceType: e.target.value }))}
+                required
+              >
+                <MenuItem value="Preventive">Preventive</MenuItem>
+                <MenuItem value="Corrective">Corrective</MenuItem>
+                <MenuItem value="Predictive">Predictive</MenuItem>
+                <MenuItem value="Routine">Routine</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                select
+                label="Frequency"
+                value={formData.frequency}
+                onChange={(e) => {
+                  const frequency = e.target.value;
+                  let days = 30;
+                  switch (frequency) {
+                    case 'Daily': days = 1; break;
+                    case 'Weekly': days = 7; break;
+                    case 'Monthly': days = 30; break;
+                    case 'Quarterly': days = 90; break;
+                    case 'Semi-Annual': days = 180; break;
+                    case 'Annual': days = 365; break;
+                  }
+                  setFormData(prev => ({ ...prev, frequency, frequencyDays: days }));
+                }}
+                required
+              >
+                <MenuItem value="Daily">Daily</MenuItem>
+                <MenuItem value="Weekly">Weekly</MenuItem>
+                <MenuItem value="Monthly">Monthly</MenuItem>
+                <MenuItem value="Quarterly">Quarterly</MenuItem>
+                <MenuItem value="Semi-Annual">Semi-Annual</MenuItem>
+                <MenuItem value="Annual">Annual</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                select
+                label="Priority"
                 value={formData.priority}
                 onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
                 required
               >
-                <MenuItem value="low">Low</MenuItem>
-                <MenuItem value="medium">Medium</MenuItem>
-                <MenuItem value="high">High</MenuItem>
-                <MenuItem value="critical">Critical</MenuItem>
+                <MenuItem value="Low">Low</MenuItem>
+                <MenuItem value="Medium">Medium</MenuItem>
+                <MenuItem value="High">High</MenuItem>
+                <MenuItem value="Critical">Critical</MenuItem>
               </TextField>
             </Grid>
             <Grid item xs={12}>
@@ -468,6 +677,8 @@ const Maintenance = () => {
                 multiline
                 rows={3}
                 required
+                error={!formData.description}
+                helperText={!formData.description ? 'Description is required' : ''}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -479,24 +690,27 @@ const Maintenance = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, scheduledDate: e.target.value }))}
                 InputLabelProps={{ shrink: true }}
                 required
+                error={!formData.scheduledDate}
+                helperText={!formData.scheduledDate ? 'Scheduled date is required' : ''}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Estimated Hours"
-                type="number"
-                value={formData.estimatedHours}
-                onChange={(e) => setFormData(prev => ({ ...prev, estimatedHours: e.target.value }))}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
+                select
                 label="Assigned To"
                 value={formData.assignedTo}
                 onChange={(e) => setFormData(prev => ({ ...prev, assignedTo: e.target.value }))}
-              />
+                required
+                error={!formData.assignedTo}
+                helperText={!formData.assignedTo ? 'Please assign this task to someone' : ''}
+              >
+                {users.map((user) => (
+                  <MenuItem key={user._id} value={user._id}>
+                    {user.name} ({user.department || 'No department'})
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
             <Grid item xs={12}>
               <TextField
@@ -514,6 +728,94 @@ const Maintenance = () => {
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button variant="contained" onClick={handleSubmit}>
             {selectedRecord ? 'Update' : 'Schedule'} Task
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* View Maintenance Dialog */}
+      <Dialog open={openViewDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6">Maintenance Task Details</Typography>
+            <Chip 
+              label={selectedRecord?.status || 'Unknown'} 
+              color={getStatusColor(selectedRecord?.status)} 
+              size="small"
+            />
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          {selectedRecord && (
+            <Grid container spacing={3} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Machine Name</Typography>
+                <Typography variant="body1" fontWeight={500}>{selectedRecord.machineName}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Machine Number</Typography>
+                <Typography variant="body1" fontWeight={500}>{selectedRecord.machineNo}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Department</Typography>
+                <Typography variant="body1" fontWeight={500}>{selectedRecord.department}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Maintenance Type</Typography>
+                <Typography variant="body1" fontWeight={500}>{selectedRecord.maintenanceType}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Frequency</Typography>
+                <Typography variant="body1" fontWeight={500}>{selectedRecord.frequency}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Priority</Typography>
+                <Chip 
+                  label={selectedRecord.priority} 
+                  color={getPriorityColor(selectedRecord.priority)} 
+                  size="small"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" color="text.secondary">Description</Typography>
+                <Typography variant="body1">{selectedRecord.description}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Scheduled Date</Typography>
+                <Typography variant="body1" fontWeight={500}>
+                  {new Date(selectedRecord.scheduledDate).toLocaleDateString()}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Assigned To</Typography>
+                <Typography variant="body1" fontWeight={500}>
+                  {selectedRecord.assignedTo?.name || 'Not assigned'}
+                </Typography>
+              </Grid>
+              {selectedRecord.notes && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" color="text.secondary">Notes</Typography>
+                  <Typography variant="body1">{selectedRecord.notes}</Typography>
+                </Grid>
+              )}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" color="text.secondary">Created</Typography>
+                <Typography variant="body1">
+                  {new Date(selectedRecord.createdAt).toLocaleString()}
+                </Typography>
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Close</Button>
+          <Button 
+            variant="outlined" 
+            onClick={() => {
+              setOpenViewDialog(false);
+              handleEditRecord(selectedRecord);
+            }}
+          >
+            Edit Task
           </Button>
         </DialogActions>
       </Dialog>

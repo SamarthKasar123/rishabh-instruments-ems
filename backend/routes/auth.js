@@ -176,4 +176,22 @@ router.put('/change-password', auth, async (req, res) => {
   }
 });
 
+// Get users for assignment dropdown
+router.get('/users', auth, async (req, res) => {
+  try {
+    const users = await User.find(
+      { isActive: true }, 
+      'name email department role'
+    ).sort({ name: 1 });
+
+    res.json({ users });
+  } catch (error) {
+    console.error('Get users error:', error);
+    res.status(500).json({ 
+      message: 'Error fetching users', 
+      error: error.message 
+    });
+  }
+});
+
 module.exports = router;

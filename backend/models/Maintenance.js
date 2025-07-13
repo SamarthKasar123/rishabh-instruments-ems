@@ -167,15 +167,27 @@ const maintenanceSchema = new mongoose.Schema({
 
 // Auto-generate maintenance ID
 maintenanceSchema.pre('save', async function(next) {
+  console.log('Pre-save hook triggered for maintenance');
+  console.log('Current maintenanceId:', this.maintenanceId);
+  
   if (!this.maintenanceId) {
-    const count = await mongoose.model('Maintenance').countDocuments();
-    this.maintenanceId = `MAINT-${String(count + 1).padStart(6, '0')}`;
+    try {
+      console.log('Generating new maintenanceId...');
+      const count = await this.constructor.countDocuments();
+      console.log('Current maintenance count:', count);
+      this.maintenanceId = `MAINT-${String(count + 1).padStart(6, '0')}`;
+      console.log('Generated maintenanceId:', this.maintenanceId);
+    } catch (error) {
+      console.error('Error generating maintenance ID:', error);
+      return next(error);
+    }
   }
   
   // Calculate total cost
   const materialCost = this.materialsUsed.reduce((total, item) => total + item.cost, 0);
   this.totalCost = materialCost + this.laborCost;
   
+  console.log('Pre-save hook completed, maintenanceId:', this.maintenanceId);
   next();
 });
 
