@@ -39,6 +39,7 @@ const Materials = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
+  const [openViewDialog, setOpenViewDialog] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -131,8 +132,14 @@ const Materials = () => {
     setOpenDialog(true);
   };
 
+  const handleViewMaterial = (material) => {
+    setSelectedMaterial(material);
+    setOpenViewDialog(true);
+  };
+
   const handleCloseDialog = () => {
     setOpenDialog(false);
+    setOpenViewDialog(false);
     setSelectedMaterial(null);
     setFormData({
       name: '',
@@ -442,7 +449,7 @@ const Materials = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        <IconButton size="small" onClick={() => handleEditMaterial(material)}>
+                        <IconButton size="small" onClick={() => handleViewMaterial(material)}>
                           <ViewIcon />
                         </IconButton>
                         <IconButton size="small" onClick={() => handleEditMaterial(material)}>
@@ -745,6 +752,192 @@ const Materials = () => {
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button variant="contained" onClick={handleSubmit}>
             {selectedMaterial ? 'Update' : 'Add'} Material
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* View Material Dialog (Read-only) */}
+      <Dialog open={openViewDialog} onClose={handleCloseDialog} maxWidth="lg" fullWidth>
+        <DialogTitle>
+          Material Details - {selectedMaterial?.name}
+        </DialogTitle>
+        <DialogContent>
+          {selectedMaterial && (
+            <Grid container spacing={3} sx={{ mt: 1 }}>
+              {/* Basic Information */}
+              <Grid item xs={12}>
+                <Typography variant="h6" color="primary" gutterBottom>
+                  Basic Information
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Serial Number</Typography>
+                <Typography variant="body1" fontWeight={600}>{selectedMaterial.serialNumber}</Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Material Name</Typography>
+                <Typography variant="body1" fontWeight={600}>{selectedMaterial.name}</Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Category</Typography>
+                <Chip label={selectedMaterial.category} variant="outlined" />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Sub Category</Typography>
+                <Typography variant="body1">{selectedMaterial.subCategory || 'N/A'}</Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Quality Grade</Typography>
+                <Chip label={`Grade ${selectedMaterial.qualityGrade}`} color="success" size="small" />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Expiry Date</Typography>
+                <Typography variant="body1">
+                  {selectedMaterial.expiryDate ? new Date(selectedMaterial.expiryDate).toLocaleDateString() : 'No Expiry'}
+                </Typography>
+              </Grid>
+              
+              {selectedMaterial.description && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" color="text.secondary">Description</Typography>
+                  <Typography variant="body1">{selectedMaterial.description}</Typography>
+                </Grid>
+              )}
+
+              {/* Inventory Information */}
+              <Grid item xs={12}>
+                <Typography variant="h6" color="primary" gutterBottom sx={{ mt: 2 }}>
+                  Inventory Information
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={3}>
+                <Typography variant="subtitle2" color="text.secondary">Unit</Typography>
+                <Typography variant="body1" fontWeight={600}>{selectedMaterial.unit}</Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={3}>
+                <Typography variant="subtitle2" color="text.secondary">Current Quantity</Typography>
+                <Typography variant="body1" fontWeight={600}>
+                  {selectedMaterial.quantityAvailable} {selectedMaterial.unit}
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={3}>
+                <Typography variant="subtitle2" color="text.secondary">Unit Price</Typography>
+                <Typography variant="body1" fontWeight={600}>
+                  ₹{selectedMaterial.unitPrice?.toLocaleString()}
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={3}>
+                <Typography variant="subtitle2" color="text.secondary">Total Value</Typography>
+                <Typography variant="body1" fontWeight={600}>
+                  ₹{((selectedMaterial.quantityAvailable || 0) * (selectedMaterial.unitPrice || 0)).toLocaleString()}
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Stock Levels</Typography>
+                <Typography variant="body1">
+                  Min: {selectedMaterial.minStockLevel} | Max: {selectedMaterial.maxStockLevel}
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Stock Status</Typography>
+                <Chip 
+                  label={getStockStatus(selectedMaterial).label} 
+                  color={getStockStatus(selectedMaterial).color}
+                  icon={getStockStatus(selectedMaterial).color === 'error' ? <WarningIcon /> : undefined}
+                />
+              </Grid>
+
+              {/* Supplier Information */}
+              <Grid item xs={12}>
+                <Typography variant="h6" color="primary" gutterBottom sx={{ mt: 2 }}>
+                  Supplier Information
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Supplier Name</Typography>
+                <Typography variant="body1" fontWeight={600}>{selectedMaterial.supplier?.name}</Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Contact</Typography>
+                <Typography variant="body1">{selectedMaterial.supplier?.contact || 'N/A'}</Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Email</Typography>
+                <Typography variant="body1">{selectedMaterial.supplier?.email || 'N/A'}</Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Address</Typography>
+                <Typography variant="body1">{selectedMaterial.supplier?.address || 'N/A'}</Typography>
+              </Grid>
+
+              {/* Location Information */}
+              <Grid item xs={12}>
+                <Typography variant="h6" color="primary" gutterBottom sx={{ mt: 2 }}>
+                  Storage Location
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={4}>
+                <Typography variant="subtitle2" color="text.secondary">Warehouse</Typography>
+                <Typography variant="body1">{selectedMaterial.location?.warehouse || 'N/A'}</Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={4}>
+                <Typography variant="subtitle2" color="text.secondary">Rack</Typography>
+                <Typography variant="body1">{selectedMaterial.location?.rack || 'N/A'}</Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={4}>
+                <Typography variant="subtitle2" color="text.secondary">Bin</Typography>
+                <Typography variant="body1">{selectedMaterial.location?.bin || 'N/A'}</Typography>
+              </Grid>
+
+              {/* Timestamps */}
+              <Grid item xs={12}>
+                <Typography variant="h6" color="primary" gutterBottom sx={{ mt: 2 }}>
+                  Record Information
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Created Date</Typography>
+                <Typography variant="body1">
+                  {selectedMaterial.createdAt ? new Date(selectedMaterial.createdAt).toLocaleString() : 'N/A'}
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">Last Updated</Typography>
+                <Typography variant="body1">
+                  {selectedMaterial.updatedAt ? new Date(selectedMaterial.updatedAt).toLocaleString() : 'N/A'}
+                </Typography>
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Close</Button>
+          <Button variant="contained" onClick={() => {
+            setOpenViewDialog(false);
+            handleEditMaterial(selectedMaterial);
+          }}>
+            Edit Material
           </Button>
         </DialogActions>
       </Dialog>
