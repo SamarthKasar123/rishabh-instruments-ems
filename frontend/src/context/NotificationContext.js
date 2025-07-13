@@ -21,19 +21,22 @@ export const NotificationProvider = ({ children }) => {
   // Fetch notifications from API
   const fetchNotifications = async () => {
     if (!isAuthenticated) {
+      console.log('🔒 Not authenticated, skipping notification fetch');
       return;
     }
 
     try {
+      console.log('📡 Fetching notifications...');
       setIsLoading(true);
-      const response = await apiService.get('/api/dashboard/alerts');
+      const response = await apiService.getAlerts();
+      console.log('📊 Raw API response:', response.data);
       
       // Flatten all notification types into a single array
       const allNotifications = [
-        ...response.lowStock,
-        ...response.overdueMaintenance,
-        ...response.upcomingMaintenance,
-        ...response.overdueTasks
+        ...(response.data.lowStock || []),
+        ...(response.data.overdueMaintenance || []),
+        ...(response.data.upcomingMaintenance || []),
+        ...(response.data.overdueTasks || [])
       ].map(notification => ({
         ...notification,
         id: `${notification.type}_${notification.id}`,
@@ -41,10 +44,13 @@ export const NotificationProvider = ({ children }) => {
         isRead: false
       }));
 
+      console.log('📱 Processed notifications:', allNotifications);
+      console.log('📈 Total notifications:', allNotifications.length);
+
       setNotifications(allNotifications);
       setUnreadCount(allNotifications.length);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error('❌ Error fetching notifications:', error);
       setNotifications([]);
       setUnreadCount(0);
     } finally {

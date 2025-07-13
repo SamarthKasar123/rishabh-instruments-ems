@@ -60,9 +60,6 @@ const Notifications = () => {
 
   // Filter notifications based on search and filters
   const filteredNotifications = notifications.filter(notification => {
-    // Debug logging (remove in production)
-    console.log('Filtering notification:', notification);
-    
     const matchesSearch = !searchTerm || 
       notification.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
       notification.type.toLowerCase().includes(searchTerm.toLowerCase());
@@ -70,19 +67,7 @@ const Notifications = () => {
     const matchesType = filterType === 'all' || notification.type === filterType;
     const matchesSeverity = filterSeverity === 'all' || notification.severity === filterSeverity;
     
-    const shouldInclude = matchesSearch && matchesType && matchesSeverity;
-    
-    console.log('Filter results:', {
-      searchTerm,
-      filterType,
-      filterSeverity,
-      matchesSearch,
-      matchesType,
-      matchesSeverity,
-      shouldInclude
-    });
-    
-    return shouldInclude;
+    return matchesSearch && matchesType && matchesSeverity;
   });
 
   // Clear all filters function
@@ -367,24 +352,28 @@ const Notifications = () => {
                       borderRadius: 1,
                       mb: 1,
                       bgcolor: !notification.isRead ? 'action.hover' : 'transparent',
+                      flexDirection: 'column',
+                      alignItems: 'stretch',
+                      p: 2,
                     }}
                   >
-                    <ListItemIcon>
+                    <Box display="flex" alignItems="flex-start" gap={2} width="100%">
                       <Avatar
                         sx={{
                           bgcolor: `${getNotificationColor(notification.severity)}.main`,
                           color: 'white',
+                          mt: 0.5,
                         }}
                       >
                         {getTypeIcon(notification.type)}
                       </Avatar>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={
+                      
+                      <Box flex={1}>
                         <Box display="flex" alignItems="center" gap={1} mb={1}>
                           <Typography
                             variant="body1"
                             fontWeight={!notification.isRead ? 600 : 400}
+                            sx={{ lineHeight: 1.4 }}
                           >
                             {notification.message}
                           </Typography>
@@ -397,9 +386,8 @@ const Notifications = () => {
                             />
                           )}
                         </Box>
-                      }
-                      secondary={
-                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                        
+                        <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
                           <Box display="flex" gap={1}>
                             <Chip
                               label={formatNotificationType(notification.type)}
@@ -418,19 +406,20 @@ const Notifications = () => {
                             {notification.timestamp.toLocaleString()}
                           </Typography>
                         </Box>
-                      }
-                    />
-                    {!notification.isRead && (
-                      <Tooltip title="Mark as read">
-                        <IconButton
-                          edge="end"
-                          onClick={() => markAsRead(notification.id)}
-                          size="small"
-                        >
-                          <DoneAllIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
+                      </Box>
+                      
+                      {!notification.isRead && (
+                        <Tooltip title="Mark as read">
+                          <IconButton
+                            onClick={() => markAsRead(notification.id)}
+                            size="small"
+                            sx={{ mt: 0.5 }}
+                          >
+                            <DoneAllIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </Box>
                   </ListItem>
                   {index < filteredNotifications.length - 1 && <Divider />}
                 </React.Fragment>
