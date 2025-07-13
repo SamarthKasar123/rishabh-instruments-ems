@@ -29,11 +29,30 @@ class ApiService {
     // Response interceptor for error handling
     this.api.interceptors.response.use(
       (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          localStorage.removeItem('authToken');
-          window.location.href = '/login';
+      async (error) => {
+        const originalRequest = error.config;
+        
+        // Handle rate limiting with retry
+        if (error.response?.status === 429 && !originalRequest._retry) {
+          originalRequest._retry = true;
+          console.warn('Rate limit exceeded, retrying after 2 seconds...');
+          
+          // Wait 2 seconds before retrying
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          return this.api(originalRequest);
         }
+        
+        // Only redirect to login for authentication errors
+        if (error.response?.status === 401) {
+          console.log('Authentication failed, redirecting to login...');
+          localStorage.removeItem('authToken');
+          
+          // Avoid redirect loop if already on login page
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+        }
+        
         return Promise.reject(error);
       }
     );
