@@ -45,6 +45,7 @@ import {
   Warning as WarningIcon,
   ErrorOutline as ErrorIcon,
   Info as InfoIcon,
+  CheckCircleOutline as SuccessIcon,
 } from '@mui/icons-material';
 
 import apiService from '../../services/apiService';
@@ -65,6 +66,12 @@ const BOM = () => {
     title: '',
     content: '',
     action: null
+  });
+  const [successDialog, setSuccessDialog] = useState({
+    open: false,
+    title: '',
+    content: '',
+    details: []
   });
   const [bomFormData, setBomFormData] = useState({
     project: '',
@@ -286,8 +293,20 @@ const BOM = () => {
           if (result.data.deductedMaterials) {
             const deductedList = result.data.deductedMaterials.map(m => 
               `${m.material}: ${m.deductedQuantity} ${m.unit}`
-            ).join(', ');
-            alert(`BOM released successfully! Materials deducted: ${deductedList}`);
+            );
+            setSuccessDialog({
+              open: true,
+              title: 'BOM Released Successfully!',
+              content: `BOM "${bom?.bomId || `BOM-${bomId?.slice(-6)}`}" has been released and materials have been deducted from inventory.`,
+              details: deductedList
+            });
+          } else {
+            setSuccessDialog({
+              open: true,
+              title: 'BOM Released Successfully!',
+              content: `BOM "${bom?.bomId || `BOM-${bomId?.slice(-6)}`}" has been released.`,
+              details: []
+            });
           }
           
           // Refresh all data including materials to show updated quantities
@@ -354,6 +373,10 @@ const BOM = () => {
 
   const handleCloseConfirmDialog = () => {
     setConfirmDialog({ open: false, type: '', bomId: '', bomName: '', title: '', content: '', action: null });
+  };
+
+  const handleCloseSuccessDialog = () => {
+    setSuccessDialog({ open: false, title: '', content: '', details: [] });
   };
 
   const calculateTotalCost = (bom) => {
@@ -1080,6 +1103,86 @@ const BOM = () => {
           >
             {confirmDialog.type === 'delete' ? 'Delete BOM' : 
              confirmDialog.type === 'obsolete' ? 'Mark Obsolete' : 'Release BOM'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Success Dialog */}
+      <Dialog
+        open={successDialog.open}
+        onClose={handleCloseSuccessDialog}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            padding: 1,
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            pb: 1,
+            color: 'success.main'
+          }}
+        >
+          <SuccessIcon color="success" />
+          <Typography variant="h6" component="span">
+            {successDialog.title}
+          </Typography>
+        </DialogTitle>
+        
+        <DialogContent sx={{ pt: 2 }}>
+          <Box
+            sx={{
+              p: 3,
+              borderRadius: 1,
+              backgroundColor: 'success.50',
+              border: 1,
+              borderColor: 'success.200',
+              mb: 2
+            }}
+          >
+            <Typography variant="body1" gutterBottom>
+              {successDialog.content}
+            </Typography>
+            
+            {successDialog.details.length > 0 && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: 'info.50', borderRadius: 1, border: 1, borderColor: 'info.200' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <InfoIcon color="info" fontSize="small" />
+                  <Typography variant="subtitle2" color="info.main">
+                    Materials Deducted from Inventory:
+                  </Typography>
+                </Box>
+                <Box sx={{ mt: 1 }}>
+                  {successDialog.details.map((detail, index) => (
+                    <Typography key={index} variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                      • {detail}
+                    </Typography>
+                  ))}
+                </Box>
+              </Box>
+            )}
+          </Box>
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button
+            onClick={handleCloseSuccessDialog}
+            variant="contained"
+            color="success"
+            size="large"
+            startIcon={<SuccessIcon />}
+            sx={{
+              minWidth: 120,
+              fontWeight: 600
+            }}
+          >
+            Got It
           </Button>
         </DialogActions>
       </Dialog>
