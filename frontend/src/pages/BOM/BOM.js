@@ -42,6 +42,9 @@ import {
   RemoveCircle as RemoveIcon,
   CheckCircle as ApproveIcon,
   Launch as ReleaseIcon,
+  Warning as WarningIcon,
+  ErrorOutline as ErrorIcon,
+  Info as InfoIcon,
 } from '@mui/icons-material';
 
 import apiService from '../../services/apiService';
@@ -54,6 +57,15 @@ const BOM = () => {
   const [error, setError] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedBom, setSelectedBom] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    type: '',
+    bomId: '',
+    bomName: '',
+    title: '',
+    content: '',
+    action: null
+  });
   const [bomFormData, setBomFormData] = useState({
     project: '',
     version: '1.0',
@@ -256,52 +268,92 @@ const BOM = () => {
   };
 
   const handleReleaseBom = async (bomId) => {
-    try {
-      console.log('Releasing BOM with ID:', bomId);
-      const result = await apiService.releaseBOM(bomId);
-      setError('');
-      
-      // Show success message with deducted materials
-      if (result.data.deductedMaterials) {
-        const deductedList = result.data.deductedMaterials.map(m => 
-          `${m.material}: ${m.deductedQuantity} ${m.unit}`
-        ).join(', ');
-        alert(`BOM released successfully! Materials deducted: ${deductedList}`);
+    const bom = boms.find(b => b._id === bomId);
+    setConfirmDialog({
+      open: true,
+      type: 'release',
+      bomId: bomId,
+      bomName: bom?.bomId || `BOM-${bomId?.slice(-6)}`,
+      title: 'Release BOM',
+      content: `Are you sure you want to release "${bom?.bomId || `BOM-${bomId?.slice(-6)}`}"? This will deduct materials from inventory and cannot be undone.`,
+      action: async () => {
+        try {
+          console.log('Releasing BOM with ID:', bomId);
+          const result = await apiService.releaseBOM(bomId);
+          setError('');
+          
+          // Show success message with deducted materials
+          if (result.data.deductedMaterials) {
+            const deductedList = result.data.deductedMaterials.map(m => 
+              `${m.material}: ${m.deductedQuantity} ${m.unit}`
+            ).join(', ');
+            alert(`BOM released successfully! Materials deducted: ${deductedList}`);
+          }
+          
+          // Refresh all data including materials to show updated quantities
+          await fetchData();
+        } catch (error) {
+          console.error('Error releasing BOM:', error);
+          console.error('Full error:', error.response?.data);
+          setError(error.response?.data?.message || 'Failed to release BOM');
+        }
       }
-      
-      // Refresh all data including materials to show updated quantities
-      await fetchData();
-    } catch (error) {
-      console.error('Error releasing BOM:', error);
-      console.error('Full error:', error.response?.data);
-      setError(error.response?.data?.message || 'Failed to release BOM');
-    }
+    });
   };
 
   const handleObsoleteBom = async (bomId) => {
-    if (window.confirm('Are you sure you want to mark this BOM as obsolete? This action will make it inactive.')) {
-      try {
-        await apiService.obsoleteBOM(bomId);
-        setError('');
-        await fetchData();
-      } catch (error) {
-        console.error('Error marking BOM as obsolete:', error);
-        setError(error.response?.data?.message || 'Failed to mark BOM as obsolete');
+    const bom = boms.find(b => b._id === bomId);
+    setConfirmDialog({
+      open: true,
+      type: 'obsolete',
+      bomId: bomId,
+      bomName: bom?.bomId || `BOM-${bomId?.slice(-6)}`,
+      title: 'Mark BOM as Obsolete',
+      content: `Are you sure you want to mark "${bom?.bomId || `BOM-${bomId?.slice(-6)}`}" as obsolete? This action will make it inactive and it cannot be released.`,
+      action: async () => {
+        try {
+          await apiService.obsoleteBOM(bomId);
+          setError('');
+          await fetchData();
+        } catch (error) {
+          console.error('Error marking BOM as obsolete:', error);
+          setError(error.response?.data?.message || 'Failed to mark BOM as obsolete');
+        }
       }
-    }
+    });
   };
 
   const handleDeleteBom = async (bomId) => {
-    if (window.confirm('Are you sure you want to delete this BOM? This action cannot be undone.')) {
-      try {
-        await apiService.deleteBOM(bomId);
-        setError('');
-        await fetchData();
-      } catch (error) {
-        console.error('Error deleting BOM:', error);
-        setError(error.response?.data?.message || 'Failed to delete BOM');
+    const bom = boms.find(b => b._id === bomId);
+    setConfirmDialog({
+      open: true,
+      type: 'delete',
+      bomId: bomId,
+      bomName: bom?.bomId || `BOM-${bomId?.slice(-6)}`,
+      title: 'Delete BOM',
+      content: `Are you sure you want to delete "${bom?.bomId || `BOM-${bomId?.slice(-6)}`}"? This action cannot be undone and all associated data will be permanently removed.`,
+      action: async () => {
+        try {
+          await apiService.deleteBOM(bomId);
+          setError('');
+          await fetchData();
+        } catch (error) {
+          console.error('Error deleting BOM:', error);
+          setError(error.response?.data?.message || 'Failed to delete BOM');
+        }
       }
+    });
+  };
+
+  const handleConfirmAction = async () => {
+    if (confirmDialog.action) {
+      await confirmDialog.action();
     }
+    setConfirmDialog({ open: false, type: '', bomId: '', bomName: '', title: '', content: '', action: null });
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setConfirmDialog({ open: false, type: '', bomId: '', bomName: '', title: '', content: '', action: null });
   };
 
   const calculateTotalCost = (bom) => {
@@ -894,6 +946,140 @@ const BOM = () => {
             disabled={!bomFormData.project || bomFormData.materials.length === 0}
           >
             {selectedBom ? 'Update' : 'Create'} BOM
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Styled Confirmation Dialog */}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={handleCloseConfirmDialog}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            padding: 1,
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            pb: 1,
+            color: confirmDialog.type === 'delete' ? 'error.main' : 
+                   confirmDialog.type === 'obsolete' ? 'warning.main' : 'primary.main'
+          }}
+        >
+          {confirmDialog.type === 'delete' && <ErrorIcon />}
+          {confirmDialog.type === 'obsolete' && <WarningIcon />}
+          {confirmDialog.type === 'release' && <ReleaseIcon />}
+          <Typography variant="h6" component="span">
+            {confirmDialog.title}
+          </Typography>
+        </DialogTitle>
+        
+        <DialogContent sx={{ pt: 2 }}>
+          <Box
+            sx={{
+              p: 3,
+              borderRadius: 1,
+              backgroundColor: confirmDialog.type === 'delete' ? 'error.50' : 
+                              confirmDialog.type === 'obsolete' ? 'warning.50' : 'primary.50',
+              border: 1,
+              borderColor: confirmDialog.type === 'delete' ? 'error.200' : 
+                          confirmDialog.type === 'obsolete' ? 'warning.200' : 'primary.200',
+              mb: 2
+            }}
+          >
+            <Typography variant="body1" gutterBottom>
+              {confirmDialog.content}
+            </Typography>
+            
+            {confirmDialog.type === 'release' && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: 'info.50', borderRadius: 1, border: 1, borderColor: 'info.200' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <InfoIcon color="info" fontSize="small" />
+                  <Typography variant="subtitle2" color="info.main">
+                    What happens when you release this BOM:
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  • Materials will be deducted from inventory
+                  • BOM status will change to "Released"
+                  • Material availability will be updated
+                  • This action cannot be undone
+                </Typography>
+              </Box>
+            )}
+            
+            {confirmDialog.type === 'obsolete' && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: 'warning.50', borderRadius: 1, border: 1, borderColor: 'warning.200' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <WarningIcon color="warning" fontSize="small" />
+                  <Typography variant="subtitle2" color="warning.main">
+                    Effects of marking as obsolete:
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  • BOM will be marked as inactive
+                  • Cannot be released or approved
+                  • Will be hidden from active BOMs list
+                  • Can still be viewed for reference
+                </Typography>
+              </Box>
+            )}
+            
+            {confirmDialog.type === 'delete' && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: 'error.50', borderRadius: 1, border: 1, borderColor: 'error.200' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <ErrorIcon color="error" fontSize="small" />
+                  <Typography variant="subtitle2" color="error.main">
+                    Warning: This action is permanent!
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  • All BOM data will be permanently deleted
+                  • Material lists and configurations will be lost
+                  • This cannot be undone
+                  • Consider marking as obsolete instead
+                </Typography>
+              </Box>
+            )}
+          </Box>
+          
+          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+            BOM ID: {confirmDialog.bomName}
+          </Typography>
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button 
+            onClick={handleCloseConfirmDialog}
+            variant="outlined"
+            size="large"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmAction}
+            variant="contained"
+            size="large"
+            color={confirmDialog.type === 'delete' ? 'error' : 
+                   confirmDialog.type === 'obsolete' ? 'warning' : 'primary'}
+            startIcon={
+              confirmDialog.type === 'delete' ? <ErrorIcon /> :
+              confirmDialog.type === 'obsolete' ? <WarningIcon /> : <ReleaseIcon />
+            }
+            sx={{
+              minWidth: 140,
+              fontWeight: 600
+            }}
+          >
+            {confirmDialog.type === 'delete' ? 'Delete BOM' : 
+             confirmDialog.type === 'obsolete' ? 'Mark Obsolete' : 'Release BOM'}
           </Button>
         </DialogActions>
       </Dialog>
