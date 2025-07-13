@@ -151,10 +151,6 @@ class ApiService {
     return this.api.delete(`/materials/${id}`);
   }
 
-  getMaterialCategories() {
-    return this.api.get('/materials/meta/categories');
-  }
-
   getLowStockMaterials() {
     return this.api.get('/materials/alerts/low-stock');
   }

@@ -5,45 +5,28 @@ import {
   Card,
   CardContent,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  IconButton,
+  Grid,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
   MenuItem,
-  Grid,
-  Alert,
+  Chip,
+  IconButton,
   CircularProgress,
   LinearProgress,
-  Avatar,
-  AvatarGroup,
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
+  Avatar,
+  AvatarGroup,
+  Alert,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
-  Visibility as ViewIcon,
-  AccountCircle as PersonIcon,
-  Timeline as TimelineIcon,
-  Assignment as TaskIcon,
   ExpandMore as ExpandMoreIcon,
-  CheckCircle as CheckIcon,
   Schedule as ScheduleIcon,
   Engineering as ProjectIcon,
 } from '@mui/icons-material';
@@ -60,10 +43,12 @@ const Projects = () => {
     name: '',
     description: '',
     clientName: '',
+    department: 'Digital Other',
+    projectType: 'Development',
     startDate: '',
     endDate: '',
-    priority: 'medium',
-    status: 'planning',
+    priority: 'Medium',
+    status: 'Planning',
     budget: '',
     teamMembers: [],
     milestones: [],
@@ -92,10 +77,12 @@ const Projects = () => {
       name: '',
       description: '',
       clientName: '',
+      department: 'Digital Other',
+      projectType: 'Development',
       startDate: '',
       endDate: '',
-      priority: 'medium',
-      status: 'planning',
+      priority: 'Medium',
+      status: 'Planning',
       budget: '',
       teamMembers: [],
       milestones: [],
@@ -106,14 +93,17 @@ const Projects = () => {
   const handleEditProject = (project) => {
     setSelectedProject(project);
     setProjectFormData({
-      name: project.name,
+      name: project.projectName || project.name || '',
       description: project.description || '',
       clientName: project.clientName || '',
+      department: project.department || 'Digital Other',
+      projectType: project.projectType || 'Development',
       startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '',
-      endDate: project.endDate ? new Date(project.endDate).toISOString().split('T')[0] : '',
-      priority: project.priority || 'medium',
-      status: project.status || 'planning',
-      budget: project.budget || '',
+      endDate: project.expectedEndDate ? new Date(project.expectedEndDate).toISOString().split('T')[0] : '',
+      priority: project.priority || 'Medium',
+      status: project.status || 'Planning',
+      budget: project.budget?.allocated?.toString() || '',
+      projectManager: project.projectManager?._id || '',
       teamMembers: project.teamMembers || [],
       milestones: project.milestones || [],
     });
@@ -123,40 +113,79 @@ const Projects = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedProject(null);
+    setError(''); // Clear errors when closing dialog
   };
 
   const handleSubmit = async () => {
     try {
+      // Validate required fields
+      if (!projectFormData.name) {
+        setError('Project name is required');
+        return;
+      }
+      
+      if (!projectFormData.startDate) {
+        setError('Start date is required');
+        return;
+      }
+      
+      if (!projectFormData.endDate) {
+        setError('End date is required');
+        return;
+      }
+
+      // Transform form data to match backend schema
+      const transformedData = {
+        projectName: projectFormData.name,
+        description: projectFormData.description,
+        department: projectFormData.department || 'Digital Other',
+        projectType: projectFormData.projectType || 'Development',
+        startDate: projectFormData.startDate,
+        expectedEndDate: projectFormData.endDate,
+        priority: projectFormData.priority,
+        status: projectFormData.status,
+        budget: {
+          allocated: parseFloat(projectFormData.budget) || 0,
+          spent: 0
+        },
+        clientName: projectFormData.clientName,
+        // projectManager will be set by backend to current user if not provided
+      };
+
+      console.log('Sending project data:', transformedData);
+
       if (selectedProject) {
-        await apiService.updateProject(selectedProject._id, projectFormData);
+        await apiService.updateProject(selectedProject._id, transformedData);
       } else {
-        await apiService.createProject(projectFormData);
+        await apiService.createProject(transformedData);
       }
       await fetchProjects();
       handleCloseDialog();
+      setError(''); // Clear any previous errors
     } catch (error) {
       console.error('Error saving project:', error);
-      setError('Failed to save project');
+      setError('Failed to save project: ' + (error.response?.data?.message || error.message));
     }
   };
 
   const getStatusColor = (status) => {
     const colors = {
-      planning: 'info',
-      active: 'primary',
-      'on-hold': 'warning',
-      completed: 'success',
-      cancelled: 'error',
+      'Planning': 'info',
+      'In Progress': 'primary',
+      'On Hold': 'warning',
+      'Completed': 'success',
+      'Cancelled': 'error',
+      'Under Maintenance': 'warning',
     };
     return colors[status] || 'default';
   };
 
   const getPriorityColor = (priority) => {
     const colors = {
-      low: 'success',
-      medium: 'info',
-      high: 'warning',
-      critical: 'error',
+      'Low': 'success',
+      'Medium': 'info',
+      'High': 'warning',
+      'Critical': 'error',
     };
     return colors[priority] || 'default';
   };
@@ -202,14 +231,14 @@ const Projects = () => {
           onClick={handleAddProject}
           size="large"
         >
-          New Project
+          Create Project
         </Button>
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
+        <Box mb={3}>
+          <Typography color="error">{error}</Typography>
+        </Box>
       )}
 
       {/* Summary Cards */}
@@ -230,10 +259,10 @@ const Projects = () => {
           <Card>
             <CardContent>
               <Typography variant="h4" fontWeight={700} color="success.main">
-                {projects.filter(p => p.status === 'active').length}
+                {projects.filter(p => p.status === 'Completed').length}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Active Projects
+                Completed
               </Typography>
             </CardContent>
           </Card>
@@ -242,7 +271,7 @@ const Projects = () => {
           <Card>
             <CardContent>
               <Typography variant="h4" fontWeight={700} color="warning.main">
-                {projects.filter(p => p.status === 'on-hold').length}
+                {projects.filter(p => p.status === 'On Hold').length}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 On Hold
@@ -254,7 +283,7 @@ const Projects = () => {
           <Card>
             <CardContent>
               <Typography variant="h4" fontWeight={700} color="info.main">
-                {projects.reduce((sum, p) => sum + (p.budget || 0), 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                {projects.reduce((sum, p) => sum + (p.budget?.allocated || 0), 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Total Budget
@@ -281,146 +310,163 @@ const Projects = () => {
               </Button>
             </Box>
           ) : (
-            projects.map((project) => {
-              const progress = calculateProgress(project);
-              const daysRemaining = getDaysRemaining(project.endDate);
-              
-              return (
-                <Accordion key={project._id} sx={{ mb: 2 }}>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" width="100%">
-                      <Box flex={1}>
-                        <Typography variant="h6" fontWeight={600}>
-                          {project.name}
-                        </Typography>
-                        <Box display="flex" alignItems="center" gap={2} mt={1}>
-                          <Chip 
-                            label={project.status} 
-                            color={getStatusColor(project.status)} 
-                            size="small" 
-                          />
-                          <Chip 
-                            label={`${project.priority} priority`} 
-                            color={getPriorityColor(project.priority)} 
-                            size="small" 
-                            variant="outlined"
-                          />
-                          {project.clientName && (
-                            <Typography variant="body2" color="text.secondary">
-                              Client: {project.clientName}
-                            </Typography>
-                          )}
-                          {daysRemaining !== null && (
-                            <Typography variant="body2" color={daysRemaining < 0 ? 'error.main' : 'text.secondary'}>
-                              {daysRemaining < 0 ? `${Math.abs(daysRemaining)} days overdue` : `${daysRemaining} days remaining`}
-                            </Typography>
-                          )}
+            <Box>
+              {projects.map((project) => {
+                const progress = calculateProgress(project);
+                const daysRemaining = getDaysRemaining(project.expectedEndDate || project.endDate);
+                
+                return (
+                  <Card key={project._id} sx={{ mb: 2, border: '1px solid', borderColor: 'grey.200' }}>
+                    <CardContent>
+                      {/* Project Header */}
+                      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                        <Box flex={1}>
+                          <Typography variant="h6" fontWeight={600} color="primary.main">
+                            {project.projectName || project.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            {project.description || 'No description provided'}
+                          </Typography>
                         </Box>
-                        <Box mt={2} mb={1}>
-                          <Box display="flex" justifyContent="space-between" mb={1}>
-                            <Typography variant="body2" color="text.secondary">
-                              Progress
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {Math.round(progress)}%
-                            </Typography>
-                          </Box>
-                          <LinearProgress variant="determinate" value={progress} />
+                        <Box display="flex" gap={1}>
+                          <IconButton size="small" onClick={() => handleEditProject(project)}>
+                            <EditIcon />
+                          </IconButton>
                         </Box>
                       </Box>
-                      <Box>
-                        <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleEditProject(project); }}>
-                          <EditIcon />
-                        </IconButton>
+
+                      {/* Status and Progress */}
+                      <Box display="flex" alignItems="center" gap={2} mb={2}>
+                        <Chip 
+                          label={project.status} 
+                          color={getStatusColor(project.status)} 
+                          size="small" 
+                        />
+                        <Chip 
+                          label={`${project.priority} priority`} 
+                          color={getPriorityColor(project.priority)} 
+                          size="small" 
+                          variant="outlined"
+                        />
+                        {project.clientName && (
+                          <Typography variant="body2" color="text.secondary">
+                            Client: {project.clientName}
+                          </Typography>
+                        )}
                       </Box>
-                    </Box>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Grid container spacing={3}>
-                      <Grid item xs={12} md={8}>
-                        <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                          Project Details
-                        </Typography>
-                        <Typography variant="body2" paragraph>
-                          {project.description || 'No description available'}
-                        </Typography>
-                        
-                        {project.milestones && project.milestones.length > 0 && (
-                          <>
-                            <Typography variant="subtitle1" fontWeight={600} gutterBottom mt={3}>
-                              Milestones
+
+                      {/* Key Information Grid */}
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6} md={3}>
+                          <Box>
+                            <Typography variant="body2" color="text.secondary">Department</Typography>
+                            <Typography variant="body1" fontWeight={500}>
+                              {project.department || 'Not specified'}
                             </Typography>
-                            <List dense>
-                              {project.milestones.map((milestone, index) => (
-                                <ListItem key={index}>
-                                  <ListItemIcon>
-                                    {milestone.status === 'completed' ? (
-                                      <CheckIcon color="success" />
-                                    ) : (
-                                      <ScheduleIcon color="action" />
-                                    )}
-                                  </ListItemIcon>
-                                  <ListItemText
-                                    primary={milestone.name}
-                                    secondary={`Due: ${new Date(milestone.dueDate).toLocaleDateString()} • ${milestone.status}`}
-                                  />
-                                </ListItem>
-                              ))}
-                            </List>
-                          </>
-                        )}
-                      </Grid>
-                      <Grid item xs={12} md={4}>
-                        <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                          Project Info
-                        </Typography>
-                        <List dense>
-                          <ListItem>
-                            <ListItemText 
-                              primary="Start Date" 
-                              secondary={project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Not set'}
-                            />
-                          </ListItem>
-                          <ListItem>
-                            <ListItemText 
-                              primary="End Date" 
-                              secondary={project.endDate ? new Date(project.endDate).toLocaleDateString() : 'Not set'}
-                            />
-                          </ListItem>
-                          <ListItem>
-                            <ListItemText 
-                              primary="Budget" 
-                              secondary={project.budget ? `₹${project.budget.toLocaleString()}` : 'Not set'}
-                            />
-                          </ListItem>
-                          <ListItem>
-                            <ListItemText 
-                              primary="Team Members" 
-                              secondary={project.teamMembers?.length || 0}
-                            />
-                          </ListItem>
-                        </List>
-                        
-                        {project.teamMembers && project.teamMembers.length > 0 && (
-                          <Box mt={2}>
-                            <Typography variant="subtitle2" gutterBottom>
-                              Team
-                            </Typography>
-                            <AvatarGroup max={4}>
-                              {project.teamMembers.map((member, index) => (
-                                <Avatar key={index} sx={{ width: 32, height: 32 }}>
-                                  {member.name?.charAt(0) || 'U'}
-                                </Avatar>
-                              ))}
-                            </AvatarGroup>
                           </Box>
-                        )}
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={3}>
+                          <Box>
+                            <Typography variant="body2" color="text.secondary">Project Type</Typography>
+                            <Typography variant="body1" fontWeight={500}>
+                              {project.projectType || 'Not specified'}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={3}>
+                          <Box>
+                            <Typography variant="body2" color="text.secondary">Budget</Typography>
+                            <Typography variant="body1" fontWeight={500} color="success.main">
+                              {project.budget?.allocated ? `₹${project.budget.allocated.toLocaleString()}` : 'Not set'}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={3}>
+                          <Box>
+                            <Typography variant="body2" color="text.secondary">Timeline</Typography>
+                            <Typography variant="body1" fontWeight={500}>
+                              {daysRemaining !== null 
+                                ? daysRemaining < 0 
+                                  ? `${Math.abs(daysRemaining)} days overdue` 
+                                  : `${daysRemaining} days remaining`
+                                : 'No end date'
+                              }
+                            </Typography>
+                          </Box>
+                        </Grid>
                       </Grid>
-                    </Grid>
-                  </AccordionDetails>
-                </Accordion>
-              );
-            })
+
+                      {/* Progress Bar */}
+                      <Box mt={3}>
+                        <Box display="flex" justifyContent="space-between" mb={1}>
+                          <Typography variant="body2" color="text.secondary">
+                            Progress
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {Math.round(progress)}%
+                          </Typography>
+                        </Box>
+                        <LinearProgress 
+                          variant="determinate" 
+                          value={progress} 
+                          sx={{ height: 8, borderRadius: 4 }}
+                        />
+                      </Box>
+
+                      {/* Expandable Details */}
+                      <Accordion sx={{ mt: 2, boxShadow: 'none', '&:before': { display: 'none' } }}>
+                        <AccordionSummary 
+                          expandIcon={<ExpandMoreIcon />}
+                          sx={{ p: 0, minHeight: 'auto', '& .MuiAccordionSummary-content': { m: 0 } }}
+                        >
+                          <Typography variant="body2" color="primary.main" fontWeight={500}>
+                            View Detailed Information
+                          </Typography>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ p: 0, pt: 2 }}>
+                          <Grid container spacing={3}>
+                            <Grid item xs={12} md={8}>
+                              <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                                Project Details
+                              </Typography>
+                              <Box>
+                                <Typography variant="body2" gutterBottom>
+                                  <strong>Start Date:</strong> {project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Not set'}
+                                </Typography>
+                                <Typography variant="body2" gutterBottom>
+                                  <strong>End Date:</strong> {project.expectedEndDate ? new Date(project.expectedEndDate).toLocaleDateString() : 'Not set'}
+                                </Typography>
+                                <Typography variant="body2" gutterBottom>
+                                  <strong>Created:</strong> {new Date(project.createdAt).toLocaleDateString()}
+                                </Typography>
+                              </Box>
+                            </Grid>
+                            <Grid item xs={12} md={4}>
+                              <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                                Team Members
+                              </Typography>
+                              {project.teamMembers && project.teamMembers.length > 0 ? (
+                                <AvatarGroup max={4}>
+                                  {project.teamMembers.map((member, index) => (
+                                    <Avatar key={index} sx={{ width: 32, height: 32 }}>
+                                      {member.name?.charAt(0) || 'U'}
+                                    </Avatar>
+                                  ))}
+                                </AvatarGroup>
+                              ) : (
+                                <Typography variant="body2" color="text.secondary">
+                                  No team members assigned
+                                </Typography>
+                              )}
+                            </Grid>
+                          </Grid>
+                        </AccordionDetails>
+                      </Accordion>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </Box>
           )}
         </CardContent>
       </Card>
@@ -431,6 +477,11 @@ const Projects = () => {
           {selectedProject ? 'Edit Project' : 'Create New Project'}
         </DialogTitle>
         <DialogContent>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
           <Grid container spacing={3} sx={{ mt: 1 }}>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -439,6 +490,8 @@ const Projects = () => {
                 value={projectFormData.name}
                 onChange={(e) => setProjectFormData(prev => ({ ...prev, name: e.target.value }))}
                 required
+                error={!projectFormData.name}
+                helperText={!projectFormData.name ? 'Project name is required' : ''}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -448,6 +501,44 @@ const Projects = () => {
                 value={projectFormData.clientName}
                 onChange={(e) => setProjectFormData(prev => ({ ...prev, clientName: e.target.value }))}
               />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                select
+                label="Department"
+                value={projectFormData.department}
+                onChange={(e) => setProjectFormData(prev => ({ ...prev, department: e.target.value }))}
+                required
+              >
+                <MenuItem value="CAM Switch">CAM Switch</MenuItem>
+                <MenuItem value="Transducer">Transducer</MenuItem>
+                <MenuItem value="MID">MID</MenuItem>
+                <MenuItem value="MFM">MFM</MenuItem>
+                <MenuItem value="PQ">PQ</MenuItem>
+                <MenuItem value="EQ">EQ</MenuItem>
+                <MenuItem value="MDI">MDI</MenuItem>
+                <MenuItem value="CT">CT</MenuItem>
+                <MenuItem value="SMT">SMT</MenuItem>
+                <MenuItem value="Digital Other">Digital Other</MenuItem>
+                <MenuItem value="Discrete">Discrete</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                select
+                label="Project Type"
+                value={projectFormData.projectType}
+                onChange={(e) => setProjectFormData(prev => ({ ...prev, projectType: e.target.value }))}
+                required
+              >
+                <MenuItem value="Automation">Automation</MenuItem>
+                <MenuItem value="Testing">Testing</MenuItem>
+                <MenuItem value="Development">Development</MenuItem>
+                <MenuItem value="Maintenance">Maintenance</MenuItem>
+                <MenuItem value="Production">Production</MenuItem>
+              </TextField>
             </Grid>
             <Grid item xs={12}>
               <TextField
@@ -467,6 +558,9 @@ const Projects = () => {
                 value={projectFormData.startDate}
                 onChange={(e) => setProjectFormData(prev => ({ ...prev, startDate: e.target.value }))}
                 InputLabelProps={{ shrink: true }}
+                required
+                error={!projectFormData.startDate}
+                helperText={!projectFormData.startDate ? 'Start date is required' : ''}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -477,35 +571,39 @@ const Projects = () => {
                 value={projectFormData.endDate}
                 onChange={(e) => setProjectFormData(prev => ({ ...prev, endDate: e.target.value }))}
                 InputLabelProps={{ shrink: true }}
+                required
+                error={!projectFormData.endDate}
+                helperText={!projectFormData.endDate ? 'End date is required' : ''}
               />
             </Grid>
             <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
-                label="Priority"
                 select
+                label="Priority"
                 value={projectFormData.priority}
                 onChange={(e) => setProjectFormData(prev => ({ ...prev, priority: e.target.value }))}
               >
-                <MenuItem value="low">Low</MenuItem>
-                <MenuItem value="medium">Medium</MenuItem>
-                <MenuItem value="high">High</MenuItem>
-                <MenuItem value="critical">Critical</MenuItem>
+                <MenuItem value="Low">Low</MenuItem>
+                <MenuItem value="Medium">Medium</MenuItem>
+                <MenuItem value="High">High</MenuItem>
+                <MenuItem value="Critical">Critical</MenuItem>
               </TextField>
             </Grid>
             <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
-                label="Status"
                 select
+                label="Status"
                 value={projectFormData.status}
                 onChange={(e) => setProjectFormData(prev => ({ ...prev, status: e.target.value }))}
               >
-                <MenuItem value="planning">Planning</MenuItem>
-                <MenuItem value="active">Active</MenuItem>
-                <MenuItem value="on-hold">On Hold</MenuItem>
-                <MenuItem value="completed">Completed</MenuItem>
-                <MenuItem value="cancelled">Cancelled</MenuItem>
+                <MenuItem value="Planning">Planning</MenuItem>
+                <MenuItem value="In Progress">In Progress</MenuItem>
+                <MenuItem value="On Hold">On Hold</MenuItem>
+                <MenuItem value="Completed">Completed</MenuItem>
+                <MenuItem value="Cancelled">Cancelled</MenuItem>
+                <MenuItem value="Under Maintenance">Under Maintenance</MenuItem>
               </TextField>
             </Grid>
             <Grid item xs={12} sm={4}>

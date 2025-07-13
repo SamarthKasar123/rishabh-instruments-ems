@@ -86,10 +86,23 @@ router.get('/:id', auth, async (req, res) => {
 // Create new project
 router.post('/', auth, authorize('admin', 'manager'), async (req, res) => {
   try {
+    console.log('Raw request body:', req.body);
+    console.log('User info:', { id: req.user._id, email: req.user.email });
+    
     const projectData = {
       ...req.body,
-      createdBy: req.user._id
+      createdBy: req.user._id,
+      // Set the current user as project manager if not specified
+      projectManager: req.body.projectManager || req.user._id
     };
+
+    // Generate unique project ID if not provided
+    if (!projectData.projectId) {
+      const count = await Project.countDocuments();
+      projectData.projectId = `PRJ${String(count + 1).padStart(4, '0')}`;
+    }
+
+    console.log('Final project data before save:', projectData);
 
     // Validate material allocations
     if (projectData.materialsAllocated && projectData.materialsAllocated.length > 0) {
