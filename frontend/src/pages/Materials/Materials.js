@@ -40,7 +40,9 @@ const Materials = () => {
   const [error, setError] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [openViewDialog, setOpenViewDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [materialToDelete, setMaterialToDelete] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -137,10 +139,30 @@ const Materials = () => {
     setOpenViewDialog(true);
   };
 
+  const handleDeleteMaterial = (material) => {
+    setMaterialToDelete(material);
+    setOpenDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await apiService.deleteMaterial(materialToDelete._id);
+      setError('');
+      await fetchMaterials();
+      setOpenDeleteDialog(false);
+      setMaterialToDelete(null);
+    } catch (error) {
+      console.error('Error deleting material:', error);
+      setError(error.response?.data?.message || 'Failed to delete material');
+    }
+  };
+
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setOpenViewDialog(false);
+    setOpenDeleteDialog(false);
     setSelectedMaterial(null);
+    setMaterialToDelete(null);
     setFormData({
       name: '',
       description: '',
@@ -455,7 +477,7 @@ const Materials = () => {
                         <IconButton size="small" onClick={() => handleEditMaterial(material)}>
                           <EditIcon />
                         </IconButton>
-                        <IconButton size="small" color="error">
+                        <IconButton size="small" color="error" onClick={() => handleDeleteMaterial(material)}>
                           <DeleteIcon />
                         </IconButton>
                       </TableCell>
@@ -938,6 +960,27 @@ const Materials = () => {
             handleEditMaterial(selectedMaterial);
           }}>
             Edit Material
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={openDeleteDialog} onClose={handleCloseDialog}>
+        <DialogTitle>
+          Confirm Delete
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete the material "{materialToDelete?.name}"?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            This action cannot be undone. The material will be permanently removed from the system.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={confirmDelete}>
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
