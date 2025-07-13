@@ -6,6 +6,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 import Layout from './components/Layout/Layout';
 import Login from './pages/Auth/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
@@ -14,6 +15,7 @@ import BOM from './pages/BOM/BOM';
 import Projects from './pages/Projects/Projects';
 import Maintenance from './pages/Maintenance/Maintenance';
 import Tasks from './pages/Tasks/Tasks';
+import Notifications from './pages/Notifications/Notifications';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Enterprise theme with Rishabh Instruments branding
@@ -136,36 +138,39 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }>
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="materials" element={<Materials />} />
-              <Route path="bom" element={<BOM />} />
-              <Route path="projects" element={<Projects />} />
-              <Route path="maintenance" element={<Maintenance />} />
-              <Route path="tasks" element={<Tasks />} />
-            </Route>
-          </Routes>
-        </Router>
-        <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
+        <NotificationProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="materials" element={<Materials />} />
+                <Route path="bom" element={<BOM />} />
+                <Route path="projects" element={<Projects />} />
+                <Route path="maintenance" element={<Maintenance />} />
+                <Route path="tasks" element={<Tasks />} />
+                <Route path="notifications" element={<Notifications />} />
+              </Route>
+            </Routes>
+          </Router>
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
+        </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
   );

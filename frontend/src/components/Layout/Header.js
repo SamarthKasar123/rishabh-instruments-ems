@@ -14,6 +14,8 @@ import {
   Box,
   Chip,
   Tooltip,
+  CircularProgress,
+  Button,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -22,14 +24,29 @@ import {
   Settings,
   Logout,
   Person,
+  Refresh as RefreshIcon,
+  Clear as ClearIcon,
+  DoneAll as DoneAllIcon,
 } from '@mui/icons-material';
 
 import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationContext';
 
 const Header = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { 
+    notifications, 
+    unreadCount, 
+    isLoading, 
+    fetchNotifications, 
+    markAsRead, 
+    markAllAsRead, 
+    getNotificationIcon, 
+    getNotificationColor 
+  } = useNotifications();
+  
   const [anchorEl, setAnchorEl] = useState(null);
   const [notificationAnchor, setNotificationAnchor] = useState(null);
 
@@ -148,7 +165,7 @@ const Header = ({ onMenuClick }) => {
             color="inherit"
             onClick={handleNotificationMenuOpen}
           >
-            <Badge badgeContent={4} color="error">
+            <Badge badgeContent={unreadCount} color="error">
               <NotificationsIcon />
             </Badge>
           </IconButton>
@@ -237,60 +254,119 @@ const Header = ({ onMenuClick }) => {
           elevation: 3,
           sx: {
             mt: 1.5,
-            maxWidth: 360,
-            maxHeight: 400,
+            maxWidth: 400,
+            maxHeight: 500,
+            width: '100%',
           },
         }}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        <Box sx={{ px: 2, py: 1.5 }}>
-          <Typography variant="subtitle1" fontWeight={600}>
-            Notifications
-          </Typography>
+        {/* Header */}
+        <Box sx={{ px: 2, py: 1.5, borderBottom: 1, borderColor: 'divider' }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="subtitle1" fontWeight={600}>
+              Notifications ({unreadCount})
+            </Typography>
+            <Box display="flex" gap={1}>
+              <Tooltip title="Refresh">
+                <IconButton size="small" onClick={fetchNotifications} disabled={isLoading}>
+                  {isLoading ? (
+                    <CircularProgress size={16} />
+                  ) : (
+                    <RefreshIcon fontSize="small" />
+                  )}
+                </IconButton>
+              </Tooltip>
+              {unreadCount > 0 && (
+                <Tooltip title="Mark all as read">
+                  <IconButton size="small" onClick={markAllAsRead}>
+                    <DoneAllIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
+          </Box>
         </Box>
+        
+        {/* Notifications List */}
+        {notifications.length === 0 ? (
+          <Box sx={{ p: 3, textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              No notifications at this time
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              You're all caught up! 🎉
+            </Typography>
+          </Box>
+        ) : (
+          <Box sx={{ maxHeight: 300, overflowY: 'auto' }}>
+            {notifications.map((notification, index) => (
+              <MenuItem
+                key={notification.id}
+                onClick={() => markAsRead(notification.id)}
+                sx={{
+                  borderLeft: !notification.isRead ? 3 : 0,
+                  borderColor: `${getNotificationColor(notification.severity)}.main`,
+                  bgcolor: !notification.isRead ? 'action.hover' : 'transparent',
+                  '&:hover': {
+                    bgcolor: 'action.selected',
+                  },
+                }}
+              >
+                <Box sx={{ width: '100%' }}>
+                  <Box display="flex" alignItems="flex-start" gap={1.5}>
+                    <Typography sx={{ fontSize: '1.2rem', lineHeight: 1 }}>
+                      {getNotificationIcon(notification.type)}
+                    </Typography>
+                    <Box flex={1}>
+                      <Typography 
+                        variant="body2" 
+                        fontWeight={!notification.isRead ? 600 : 400}
+                        sx={{ lineHeight: 1.4 }}
+                      >
+                        {notification.message}
+                      </Typography>
+                      <Box display="flex" justifyContent="space-between" alignItems="center" mt={0.5}>
+                        <Chip
+                          label={notification.type.replace('_', ' ').toUpperCase()}
+                          size="small"
+                          color={getNotificationColor(notification.severity)}
+                          variant="outlined"
+                          sx={{ fontSize: '0.65rem', height: 20 }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          {notification.timestamp.toLocaleTimeString([], { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+                </Box>
+              </MenuItem>
+            ))}
+          </Box>
+        )}
+        
         <Divider />
         
-        <MenuItem>
-          <Box>
-            <Typography variant="body2" fontWeight={500}>
-              Low Stock Alert
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Material ABC-001 is running low
-            </Typography>
-          </Box>
-        </MenuItem>
-        
-        <MenuItem>
-          <Box>
-            <Typography variant="body2" fontWeight={500}>
-              Maintenance Due
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Machine XYZ-123 maintenance scheduled
-            </Typography>
-          </Box>
-        </MenuItem>
-        
-        <MenuItem>
-          <Box>
-            <Typography variant="body2" fontWeight={500}>
-              Task Overdue
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Project milestone deadline missed
-            </Typography>
-          </Box>
-        </MenuItem>
-        
-        <Divider />
-        
-        <MenuItem onClick={() => navigate('/notifications')}>
-          <Typography variant="body2" color="primary.main" fontWeight={500}>
+        {/* Footer Actions */}
+        <Box sx={{ p: 1 }}>
+          <Button
+            fullWidth
+            variant="text"
+            size="small"
+            onClick={() => {
+              handleNotificationMenuClose();
+              navigate('/notifications');
+            }}
+            sx={{ justifyContent: 'center' }}
+          >
             View All Notifications
-          </Typography>
-        </MenuItem>
+          </Button>
+        </Box>
       </Menu>
     </Toolbar>
   );
