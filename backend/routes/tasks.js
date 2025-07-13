@@ -130,11 +130,21 @@ router.get('/:id', auth, async (req, res) => {
 // Create new task
 router.post('/', auth, authorize('admin', 'manager'), async (req, res) => {
   try {
+    console.log('Raw request body:', req.body);
+    console.log('User info:', { id: req.user._id, email: req.user.email });
+
+    // Generate taskId manually
+    const count = await Task.countDocuments();
+    const taskId = `TASK-${String(count + 1).padStart(6, '0')}`;
+
     const taskData = {
       ...req.body,
+      taskId: taskId,
       assignedBy: req.user._id,
       createdBy: req.user._id
     };
+
+    console.log('Final task data before save:', taskData);
 
     // Validate project or maintenance if provided
     if (taskData.project) {

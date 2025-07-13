@@ -53,9 +53,11 @@ import apiService from '../../services/apiService';
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
+  const [openViewDialog, setOpenViewDialog] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [formData, setFormData] = useState({
@@ -63,23 +65,27 @@ const Tasks = () => {
     description: '',
     projectId: '',
     assignedTo: '',
-    priority: 'medium',
-    status: 'pending',
+    priority: 'Medium',
+    status: 'Pending',
     dueDate: '',
     estimatedHours: '',
     tags: '',
+    taskType: 'Project Task',
+    department: 'Digital Other',
   });
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [tasksResponse, projectsResponse] = await Promise.all([
+      const [tasksResponse, projectsResponse, usersResponse] = await Promise.all([
         apiService.getTasks(),
         apiService.getProjects(),
+        apiService.getUsers(),
       ]);
       
       setTasks(tasksResponse.data.tasks || []);
       setProjects(projectsResponse.data.projects || []);
+      setUsers(usersResponse.data.users || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Failed to load data');
@@ -99,13 +105,20 @@ const Tasks = () => {
       description: '',
       projectId: '',
       assignedTo: '',
-      priority: 'medium',
-      status: 'pending',
+      priority: 'Medium',
+      status: 'Pending',
       dueDate: '',
       estimatedHours: '',
       tags: '',
+      taskType: 'Project Task',
+      department: 'Digital Other',
     });
     setOpenDialog(true);
+  };
+
+  const handleViewTask = (task) => {
+    setSelectedTask(task);
+    setOpenViewDialog(true);
   };
 
   const handleEditTask = (task) => {
@@ -113,13 +126,15 @@ const Tasks = () => {
     setFormData({
       title: task.title || '',
       description: task.description || '',
-      projectId: task.projectId?._id || '',
-      assignedTo: task.assignedTo || '',
-      priority: task.priority || 'medium',
-      status: task.status || 'pending',
+      projectId: task.project?._id || '',
+      assignedTo: task.assignedTo?._id || '',
+      priority: task.priority || 'Medium',
+      status: task.status || 'Pending',
       dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
       estimatedHours: task.estimatedHours || '',
       tags: task.tags?.join(', ') || '',
+      taskType: task.taskType || 'Project Task',
+      department: task.department || 'Digital Other',
     });
     setOpenDialog(true);
   };
@@ -129,12 +144,44 @@ const Tasks = () => {
     setSelectedTask(null);
   };
 
+  const handleCloseViewDialog = () => {
+    setOpenViewDialog(false);
+    setSelectedTask(null);
+  };
+
   const handleSubmit = async () => {
     try {
+      // Validate required fields
+      if (!formData.title) {
+        setError('Task title is required');
+        return;
+      }
+      
+      if (!formData.assignedTo) {
+        setError('Please assign the task to someone');
+        return;
+      }
+      
+      if (!formData.dueDate) {
+        setError('Due date is required');
+        return;
+      }
+
       const submitData = {
-        ...formData,
+        title: formData.title,
+        description: formData.description,
+        project: formData.projectId || undefined,
+        assignedTo: formData.assignedTo,
+        priority: formData.priority,
+        status: formData.status,
+        dueDate: formData.dueDate,
+        estimatedHours: parseFloat(formData.estimatedHours) || 0,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+        taskType: formData.taskType,
+        department: formData.department,
       };
+
+      console.log('Sending task data:', submitData);
       
       if (selectedTask) {
         await apiService.updateTask(selectedTask._id, submitData);
@@ -143,9 +190,10 @@ const Tasks = () => {
       }
       await fetchData();
       handleCloseDialog();
+      setError(''); // Clear any previous errors
     } catch (error) {
       console.error('Error saving task:', error);
-      setError('Failed to save task');
+      setError('Failed to save task: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -161,21 +209,22 @@ const Tasks = () => {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: 'default',
-      'in-progress': 'info',
-      completed: 'success',
-      cancelled: 'error',
-      'on-hold': 'warning',
+      'Pending': 'default',
+      'In Progress': 'info',
+      'Completed': 'success',
+      'Cancelled': 'error',
+      'On Hold': 'warning',
+      'Under Review': 'warning',
     };
     return colors[status] || 'default';
   };
 
   const getPriorityColor = (priority) => {
     const colors = {
-      low: 'success',
-      medium: 'info',
-      high: 'warning',
-      critical: 'error',
+      'Low': 'success',
+      'Medium': 'info',
+      'High': 'warning',
+      'Critical': 'error',
     };
     return colors[priority] || 'default';
   };
@@ -194,15 +243,15 @@ const Tasks = () => {
       case 0: // All
         return tasks;
       case 1: // Pending
-        return tasks.filter(t => t.status === 'pending');
+        return tasks.filter(t => t.status === 'Pending');
       case 2: // In Progress
-        return tasks.filter(t => t.status === 'in-progress');
+        return tasks.filter(t => t.status === 'In Progress');
       case 3: // Completed
-        return tasks.filter(t => t.status === 'completed');
+        return tasks.filter(t => t.status === 'Completed');
       case 4: // Overdue
         return tasks.filter(t => {
           const daysUntilDue = getDaysUntilDue(t.dueDate);
-          return daysUntilDue < 0 && t.status !== 'completed';
+          return daysUntilDue < 0 && t.status !== 'Completed';
         });
       default:
         return tasks;
@@ -265,7 +314,7 @@ const Tasks = () => {
           <Card>
             <CardContent>
               <Typography variant="h4" fontWeight={700} color="info.main">
-                {tasks.filter(t => t.status === 'in-progress').length}
+                {tasks.filter(t => t.status === 'In Progress').length}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 In Progress
@@ -277,7 +326,7 @@ const Tasks = () => {
           <Card>
             <CardContent>
               <Typography variant="h4" fontWeight={700} color="success.main">
-                {tasks.filter(t => t.status === 'completed').length}
+                {tasks.filter(t => t.status === 'Completed').length}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Completed
@@ -291,7 +340,7 @@ const Tasks = () => {
               <Typography variant="h4" fontWeight={700} color="error.main">
                 {tasks.filter(t => {
                   const daysUntilDue = getDaysUntilDue(t.dueDate);
-                  return daysUntilDue < 0 && t.status !== 'completed';
+                  return daysUntilDue < 0 && t.status !== 'Completed';
                 }).length}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -390,16 +439,16 @@ const Tasks = () => {
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2">
-                            {task.projectId?.name || 'No Project'}
+                            {task.project?.projectName || task.project?.name || 'No Project'}
                           </Typography>
                         </TableCell>
                         <TableCell>
                           <Box display="flex" alignItems="center" gap={1}>
                             <Avatar sx={{ width: 24, height: 24, fontSize: '0.8rem' }}>
-                              {task.assignedTo?.charAt(0) || 'U'}
+                              {task.assignedTo?.name?.charAt(0) || 'U'}
                             </Avatar>
                             <Typography variant="body2">
-                              {task.assignedTo || 'Unassigned'}
+                              {task.assignedTo?.name || 'Unassigned'}
                             </Typography>
                           </Box>
                         </TableCell>
@@ -439,26 +488,26 @@ const Tasks = () => {
                           />
                         </TableCell>
                         <TableCell>
-                          <IconButton size="small" onClick={() => handleEditTask(task)}>
+                          <IconButton size="small" onClick={() => handleViewTask(task)}>
                             <ViewIcon />
                           </IconButton>
                           <IconButton size="small" onClick={() => handleEditTask(task)}>
                             <EditIcon />
                           </IconButton>
-                          {task.status === 'pending' && (
+                          {task.status === 'Pending' && (
                             <IconButton 
                               size="small" 
                               color="info"
-                              onClick={() => handleStatusChange(task._id, 'in-progress')}
+                              onClick={() => handleStatusChange(task._id, 'In Progress')}
                             >
                               <StartIcon />
                             </IconButton>
                           )}
-                          {task.status === 'in-progress' && (
+                          {task.status === 'In Progress' && (
                             <IconButton 
                               size="small" 
                               color="success"
-                              onClick={() => handleStatusChange(task._id, 'completed')}
+                              onClick={() => handleStatusChange(task._id, 'Completed')}
                             >
                               <CompleteIcon />
                             </IconButton>
@@ -474,12 +523,178 @@ const Tasks = () => {
         </CardContent>
       </Card>
 
+      {/* View Task Dialog */}
+      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} maxWidth="md" fullWidth>
+        <DialogTitle>
+          Task Details
+        </DialogTitle>
+        <DialogContent>
+          {selectedTask && (
+            <Grid container spacing={3} sx={{ mt: 1 }}>
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom>
+                  {selectedTask.title}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Task ID: {selectedTask.taskId}
+                </Typography>
+              </Grid>
+              
+              {selectedTask.description && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Description
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {selectedTask.description}
+                  </Typography>
+                </Grid>
+              )}
+
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Task Type
+                </Typography>
+                <Typography variant="body2">
+                  {selectedTask.taskType}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Department
+                </Typography>
+                <Typography variant="body2">
+                  {selectedTask.department}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Project
+                </Typography>
+                <Typography variant="body2">
+                  {selectedTask.project?.projectName || selectedTask.project?.name || 'No Project'}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Assigned To
+                </Typography>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Avatar sx={{ width: 32, height: 32 }}>
+                    {selectedTask.assignedTo?.name?.charAt(0) || 'U'}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="body2">
+                      {selectedTask.assignedTo?.name || 'Unassigned'}
+                    </Typography>
+                    {selectedTask.assignedTo?.email && (
+                      <Typography variant="caption" color="text.secondary">
+                        {selectedTask.assignedTo.email}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} sm={4}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Priority
+                </Typography>
+                <Chip
+                  label={selectedTask.priority}
+                  color={getPriorityColor(selectedTask.priority)}
+                  size="small"
+                  icon={<FlagIcon />}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={4}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Status
+                </Typography>
+                <Chip
+                  label={selectedTask.status}
+                  color={getStatusColor(selectedTask.status)}
+                  size="small"
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={4}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Estimated Hours
+                </Typography>
+                <Typography variant="body2">
+                  {selectedTask.estimatedHours || 0} hours
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Due Date
+                </Typography>
+                <Typography variant="body2">
+                  {selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString() : 'No due date'}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Created Date
+                </Typography>
+                <Typography variant="body2">
+                  {new Date(selectedTask.createdAt).toLocaleDateString()}
+                </Typography>
+              </Grid>
+
+              {selectedTask.tags && selectedTask.tags.length > 0 && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Tags
+                  </Typography>
+                  <Box display="flex" gap={1} flexWrap="wrap">
+                    {selectedTask.tags.map((tag, index) => (
+                      <Chip 
+                        key={index}
+                        label={tag}
+                        size="small"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Box>
+                </Grid>
+              )}
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseViewDialog}>Close</Button>
+          <Button 
+            variant="contained" 
+            onClick={() => {
+              handleCloseViewDialog();
+              handleEditTask(selectedTask);
+            }}
+            startIcon={<EditIcon />}
+          >
+            Edit Task
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Add/Edit Task Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
           {selectedTask ? 'Edit Task' : 'Create New Task'}
         </DialogTitle>
         <DialogContent>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
           <Grid container spacing={3} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <TextField
@@ -488,6 +703,8 @@ const Tasks = () => {
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 required
+                error={!formData.title}
+                helperText={!formData.title ? 'Task title is required' : ''}
               />
             </Grid>
             <Grid item xs={12}>
@@ -503,6 +720,46 @@ const Tasks = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
+                label="Task Type"
+                select
+                value={formData.taskType}
+                onChange={(e) => setFormData(prev => ({ ...prev, taskType: e.target.value }))}
+                required
+              >
+                <MenuItem value="Project Task">Project Task</MenuItem>
+                <MenuItem value="Maintenance Task">Maintenance Task</MenuItem>
+                <MenuItem value="Quality Check">Quality Check</MenuItem>
+                <MenuItem value="Documentation">Documentation</MenuItem>
+                <MenuItem value="Training">Training</MenuItem>
+                <MenuItem value="Meeting">Meeting</MenuItem>
+                <MenuItem value="Other">Other</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Department"
+                select
+                value={formData.department}
+                onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
+                required
+              >
+                <MenuItem value="CAM Switch">CAM Switch</MenuItem>
+                <MenuItem value="Transducer">Transducer</MenuItem>
+                <MenuItem value="MID">MID</MenuItem>
+                <MenuItem value="MFM">MFM</MenuItem>
+                <MenuItem value="PQ">PQ</MenuItem>
+                <MenuItem value="EQ">EQ</MenuItem>
+                <MenuItem value="MDI">MDI</MenuItem>
+                <MenuItem value="CT">CT</MenuItem>
+                <MenuItem value="SMT">SMT</MenuItem>
+                <MenuItem value="Digital Other">Digital Other</MenuItem>
+                <MenuItem value="Discrete">Discrete</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
                 label="Project"
                 select
                 value={formData.projectId}
@@ -511,7 +768,7 @@ const Tasks = () => {
                 <MenuItem value="">No Project</MenuItem>
                 {projects.map((project) => (
                   <MenuItem key={project._id} value={project._id}>
-                    {project.name}
+                    {project.projectName || project.name}
                   </MenuItem>
                 ))}
               </TextField>
@@ -520,9 +777,20 @@ const Tasks = () => {
               <TextField
                 fullWidth
                 label="Assigned To"
+                select
                 value={formData.assignedTo}
                 onChange={(e) => setFormData(prev => ({ ...prev, assignedTo: e.target.value }))}
-              />
+                required
+                error={!formData.assignedTo}
+                helperText={!formData.assignedTo ? 'Please assign the task to someone' : ''}
+              >
+                <MenuItem value="">Select User</MenuItem>
+                {users.map((user) => (
+                  <MenuItem key={user._id} value={user._id}>
+                    {user.name} ({user.email})
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
             <Grid item xs={12} sm={4}>
               <TextField
@@ -533,10 +801,10 @@ const Tasks = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
                 required
               >
-                <MenuItem value="low">Low</MenuItem>
-                <MenuItem value="medium">Medium</MenuItem>
-                <MenuItem value="high">High</MenuItem>
-                <MenuItem value="critical">Critical</MenuItem>
+                <MenuItem value="Low">Low</MenuItem>
+                <MenuItem value="Medium">Medium</MenuItem>
+                <MenuItem value="High">High</MenuItem>
+                <MenuItem value="Critical">Critical</MenuItem>
               </TextField>
             </Grid>
             <Grid item xs={12} sm={4}>
@@ -548,11 +816,12 @@ const Tasks = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
                 required
               >
-                <MenuItem value="pending">Pending</MenuItem>
-                <MenuItem value="in-progress">In Progress</MenuItem>
-                <MenuItem value="completed">Completed</MenuItem>
-                <MenuItem value="on-hold">On Hold</MenuItem>
-                <MenuItem value="cancelled">Cancelled</MenuItem>
+                <MenuItem value="Pending">Pending</MenuItem>
+                <MenuItem value="In Progress">In Progress</MenuItem>
+                <MenuItem value="Under Review">Under Review</MenuItem>
+                <MenuItem value="Completed">Completed</MenuItem>
+                <MenuItem value="On Hold">On Hold</MenuItem>
+                <MenuItem value="Cancelled">Cancelled</MenuItem>
               </TextField>
             </Grid>
             <Grid item xs={12} sm={4}>
@@ -572,6 +841,9 @@ const Tasks = () => {
                 value={formData.dueDate}
                 onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
                 InputLabelProps={{ shrink: true }}
+                required
+                error={!formData.dueDate}
+                helperText={!formData.dueDate ? 'Due date is required' : ''}
               />
             </Grid>
             <Grid item xs={12} sm={6}>

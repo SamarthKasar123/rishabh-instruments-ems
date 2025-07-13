@@ -159,15 +159,6 @@ const taskSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Auto-generate task ID
-taskSchema.pre('save', async function(next) {
-  if (!this.taskId) {
-    const count = await mongoose.model('Task').countDocuments();
-    this.taskId = `TASK-${String(count + 1).padStart(6, '0')}`;
-  }
-  next();
-});
-
 // Index for better performance
 taskSchema.index({ taskId: 1 });
 taskSchema.index({ assignedTo: 1 });
