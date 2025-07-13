@@ -102,9 +102,29 @@ const Header = ({ onMenuClick }) => {
         <MenuIcon />
       </IconButton>
 
-      <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-        {getPageTitle()}
-      </Typography>
+      {/* Logo and Brand */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+        <Box
+          component="img"
+          src="https://media.licdn.com/dms/image/v2/C510BAQE9vzMx9LndWw/company-logo_200_200/company-logo_200_200/0/1631351224335?e=2147483647&v=beta&t=gWxyPJA3rLsVaRBS9EuGzsWZOH1Wfi46yJZPqP7ng2g"
+          alt="Company Logo"
+          sx={{
+            height: 40,
+            width: 40,
+            borderRadius: 1,
+            cursor: 'pointer'
+          }}
+          onClick={() => navigate('/dashboard')}
+        />
+        <Box>
+          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 600 }}>
+            {getPageTitle()}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
+            Manufacturing Management System
+          </Typography>
+        </Box>
+      </Box>
 
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         {/* User Department & Role */}

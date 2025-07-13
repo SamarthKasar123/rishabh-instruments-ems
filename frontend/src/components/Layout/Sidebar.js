@@ -97,21 +97,24 @@ const Sidebar = ({ onItemClick }) => {
           borderColor: 'divider',
           background: 'linear-gradient(135deg, #B85494 0%, #8B3A6B 100%)',
           color: 'white',
+          cursor: 'pointer'
         }}
+        onClick={() => handleNavigation('/dashboard')}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Avatar
+          <Box
+            component="img"
+            src="https://media.licdn.com/dms/image/v2/C510BAQE9vzMx9LndWw/company-logo_200_200/company-logo_200_200/0/1631351224335?e=2147483647&v=beta&t=gWxyPJA3rLsVaRBS9EuGzsWZOH1Wfi46yJZPqP7ng2g"
+            alt="Rishabh Instruments Logo"
             sx={{
               width: 48,
               height: 48,
-              bgcolor: 'rgba(255, 255, 255, 0.2)',
+              borderRadius: 1,
               mr: 2,
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
+              bgcolor: 'rgba(255, 255, 255, 0.1)',
+              p: 0.5
             }}
-          >
-            R
-          </Avatar>
+          />
           <Box>
             <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
               RISHABH

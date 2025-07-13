@@ -410,6 +410,80 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
+
+        {/* Developer Contact Card */}
+        <Grid item xs={12} md={6} lg={4}>
+          <Card sx={{ 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white'
+          }}>
+            <CardContent>
+              <Box display="flex" alignItems="center" mb={2}>
+                <Box
+                  component="img"
+                  src="https://media.licdn.com/dms/image/v2/C510BAQE9vzMx9LndWw/company-logo_200_200/company-logo_200_200/0/1631351224335?e=2147483647&v=beta&t=gWxyPJA3rLsVaRBS9EuGzsWZOH1Wfi46yJZPqP7ng2g"
+                  alt="Rishabh Instruments Logo"
+                  sx={{
+                    height: 32,
+                    width: 32,
+                    borderRadius: 1,
+                    mr: 1.5,
+                    bgcolor: 'rgba(255, 255, 255, 0.2)',
+                    p: 0.5
+                  }}
+                />
+                <Typography variant="h6" fontWeight={600}>
+                  System Developer
+                </Typography>
+              </Box>
+              
+              <Typography variant="body2" sx={{ mb: 2, opacity: 0.9 }}>
+                Need customization or similar system development?
+              </Typography>
+              
+              <Box display="flex" flexDirection="column" gap={1}>
+                <Typography variant="subtitle2" fontWeight={600}>
+                  Samarth Kasar
+                </Typography>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography variant="caption">📞</Typography>
+                  <Typography variant="body2" component="a" 
+                    href="tel:+919699636055" 
+                    sx={{ color: 'inherit', textDecoration: 'none' }}
+                  >
+                    +91 9699636055
+                  </Typography>
+                </Box>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography variant="caption">✉️</Typography>
+                  <Typography variant="body2" component="a" 
+                    href="mailto:samarthkasar9924@gmail.com" 
+                    sx={{ color: 'inherit', textDecoration: 'none' }}
+                  >
+                    samarthkasar9924@gmail.com
+                  </Typography>
+                </Box>
+              </Box>
+              
+              <Button 
+                variant="outlined" 
+                fullWidth 
+                sx={{ 
+                  mt: 2, 
+                  color: 'white', 
+                  borderColor: 'rgba(255,255,255,0.5)',
+                  '&:hover': {
+                    borderColor: 'white',
+                    backgroundColor: 'rgba(255,255,255,0.1)'
+                  }
+                }}
+                href="tel:+919699636055"
+              >
+                Contact Developer
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
       </Grid>
     </Box>
   );

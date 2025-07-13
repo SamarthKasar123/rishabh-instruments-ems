@@ -15,6 +15,7 @@ import { Menu as MenuIcon } from '@mui/icons-material';
 
 import Sidebar from './Sidebar';
 import Header from './Header';
+import Footer from './Footer';
 
 const drawerWidth = 280;
 
@@ -96,14 +97,18 @@ const Layout = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
           width: { lg: `calc(100% - ${drawerWidth}px)` },
           mt: '64px', // Height of AppBar
           bgcolor: 'background.default',
           minHeight: 'calc(100vh - 64px)',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
-        <Outlet />
+        <Box sx={{ flexGrow: 1, p: 3 }}>
+          <Outlet />
+        </Box>
+        <Footer />
       </Box>
     </Box>
   );

@@ -93,19 +93,21 @@ const Login = () => {
             }}
           >
             <Box textAlign="center" sx={{ maxWidth: 400 }}>
-              <Avatar
+              <Box
+                component="img"
+                src="https://media.licdn.com/dms/image/v2/C510BAQE9vzMx9LndWw/company-logo_200_200/company-logo_200_200/0/1631351224335?e=2147483647&v=beta&t=gWxyPJA3rLsVaRBS9EuGzsWZOH1Wfi46yJZPqP7ng2g"
+                alt="Rishabh Instruments Logo"
                 sx={{
                   width: 120,
                   height: 120,
-                  bgcolor: 'rgba(255, 255, 255, 0.2)',
-                  mx: 'auto',
+                  borderRadius: 2,
+                  bgcolor: 'rgba(255, 255, 255, 0.1)',
+                  p: 2,
                   mb: 3,
-                  fontSize: '3rem',
-                  fontWeight: 'bold',
+                  mx: 'auto',
+                  display: 'block'
                 }}
-              >
-                R
-              </Avatar>
+              />
               
               <Typography variant="h3" fontWeight={700} gutterBottom>
                 RISHABH
@@ -262,8 +264,14 @@ const Login = () => {
                 </Box>
 
                 <Box textAlign="center" mt={4}>
-                  <Typography variant="body2" color="text.secondary">
-                    © 2025 Rishabh Instruments Limited. All rights reserved.
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    © {new Date().getFullYear()} Rishabh Instruments Limited. All rights reserved.
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                    System developed by <strong>Samarth Kasar</strong>
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    📞 +91 9699636055 | ✉️ samarthkasar9924@gmail.com
                   </Typography>
                 </Box>
               </Container>
