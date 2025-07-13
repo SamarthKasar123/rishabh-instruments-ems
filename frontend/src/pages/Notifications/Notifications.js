@@ -60,12 +60,37 @@ const Notifications = () => {
 
   // Filter notifications based on search and filters
   const filteredNotifications = notifications.filter(notification => {
-    const matchesSearch = notification.message.toLowerCase().includes(searchTerm.toLowerCase());
+    // Debug logging (remove in production)
+    console.log('Filtering notification:', notification);
+    
+    const matchesSearch = !searchTerm || 
+      notification.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      notification.type.toLowerCase().includes(searchTerm.toLowerCase());
+    
     const matchesType = filterType === 'all' || notification.type === filterType;
     const matchesSeverity = filterSeverity === 'all' || notification.severity === filterSeverity;
     
-    return matchesSearch && matchesType && matchesSeverity;
+    const shouldInclude = matchesSearch && matchesType && matchesSeverity;
+    
+    console.log('Filter results:', {
+      searchTerm,
+      filterType,
+      filterSeverity,
+      matchesSearch,
+      matchesType,
+      matchesSeverity,
+      shouldInclude
+    });
+    
+    return shouldInclude;
   });
+
+  // Clear all filters function
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterType('all');
+    setFilterSeverity('all');
+  };
 
   // Group notifications by type for summary
   const notificationSummary = notifications.reduce((acc, notification) => {
@@ -215,16 +240,26 @@ const Notifications = () => {
             </CardContent>
           </Card>
         </Grid>
-      </Grid>
-
-      {/* Filters */}
+      </Grid>      {/* Filters */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Filter Notifications
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={4}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Typography variant="h6">
+              Filter Notifications
+            </Typography>
+            {(searchTerm || filterType !== 'all' || filterSeverity !== 'all') && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ClearIcon />}
+                onClick={clearFilters}
+              >
+                Clear Filters
+              </Button>
+            )}
+          </Box>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} md={3}>
               <TextField
                 fullWidth
                 placeholder="Search notifications..."
@@ -237,9 +272,10 @@ const Notifications = () => {
                     </InputAdornment>
                   ),
                 }}
+                helperText={`${filteredNotifications.length} of ${notifications.length} notifications`}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={3}>
               <FormControl fullWidth>
                 <InputLabel>Type</InputLabel>
                 <Select
@@ -247,15 +283,23 @@ const Notifications = () => {
                   label="Type"
                   onChange={(e) => setFilterType(e.target.value)}
                 >
-                  <MenuItem value="all">All Types</MenuItem>
-                  <MenuItem value="low_stock">Low Stock</MenuItem>
-                  <MenuItem value="overdue_maintenance">Overdue Maintenance</MenuItem>
-                  <MenuItem value="upcoming_maintenance">Upcoming Maintenance</MenuItem>
-                  <MenuItem value="overdue_task">Overdue Tasks</MenuItem>
+                  <MenuItem value="all">All Types ({notifications.length})</MenuItem>
+                  <MenuItem value="low_stock">
+                    Low Stock ({notificationSummary.low_stock || 0})
+                  </MenuItem>
+                  <MenuItem value="overdue_maintenance">
+                    Overdue Maintenance ({notificationSummary.overdue_maintenance || 0})
+                  </MenuItem>
+                  <MenuItem value="upcoming_maintenance">
+                    Upcoming Maintenance ({notificationSummary.upcoming_maintenance || 0})
+                  </MenuItem>
+                  <MenuItem value="overdue_task">
+                    Overdue Tasks ({notificationSummary.overdue_task || 0})
+                  </MenuItem>
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={3}>
               <FormControl fullWidth>
                 <InputLabel>Severity</InputLabel>
                 <Select
@@ -269,6 +313,22 @@ const Notifications = () => {
                   <MenuItem value="info">Info</MenuItem>
                 </Select>
               </FormControl>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Box display="flex" gap={1}>
+                <Chip
+                  label={`Showing ${filteredNotifications.length}`}
+                  color="primary"
+                  variant="outlined"
+                />
+                {unreadCount > 0 && (
+                  <Chip
+                    label={`${unreadCount} Unread`}
+                    color="error"
+                    size="small"
+                  />
+                )}
+              </Box>
             </Grid>
           </Grid>
         </CardContent>
