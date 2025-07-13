@@ -16,6 +16,8 @@ import Projects from './pages/Projects/Projects';
 import Maintenance from './pages/Maintenance/Maintenance';
 import Tasks from './pages/Tasks/Tasks';
 import Notifications from './pages/Notifications/Notifications';
+import Profile from './pages/Profile/Profile';
+import Settings from './pages/Settings/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Enterprise theme with Rishabh Instruments branding
@@ -155,6 +157,8 @@ function App() {
                 <Route path="maintenance" element={<Maintenance />} />
                 <Route path="tasks" element={<Tasks />} />
                 <Route path="notifications" element={<Notifications />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="settings" element={<Settings />} />
               </Route>
             </Routes>
           </Router>

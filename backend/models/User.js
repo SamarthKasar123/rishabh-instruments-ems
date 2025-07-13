@@ -29,6 +29,19 @@ const userSchema = new mongoose.Schema({
     enum: ['CAM Switch', 'Transducer', 'MID', 'MFM', 'PQ', 'EQ', 'MDI', 'CT', 'SMT', 'Digital Other', 'Discrete'],
     required: true
   },
+  phone: {
+    type: String,
+    trim: true
+  },
+  position: {
+    type: String,
+    trim: true
+  },
+  bio: {
+    type: String,
+    trim: true,
+    maxlength: 500
+  },
   isActive: {
     type: Boolean,
     default: true

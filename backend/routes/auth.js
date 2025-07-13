@@ -112,7 +112,7 @@ router.get('/me', auth, async (req, res) => {
 // Update profile
 router.put('/profile', auth, async (req, res) => {
   try {
-    const { name, email, department } = req.body;
+    const { name, email, department, phone, position, bio } = req.body;
     
     const user = await User.findById(req.user._id);
     if (!user) {
@@ -130,6 +130,9 @@ router.put('/profile', auth, async (req, res) => {
     user.name = name || user.name;
     user.email = email || user.email;
     user.department = department || user.department;
+    user.phone = phone || user.phone;
+    user.position = position || user.position;
+    user.bio = bio || user.bio;
     user.updatedBy = req.user._id;
 
     await user.save();
