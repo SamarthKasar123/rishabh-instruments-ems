@@ -477,7 +477,9 @@ const Dashboard = () => {
                     backgroundColor: 'rgba(255,255,255,0.1)'
                   }
                 }}
-                href="tel:+919699636055"
+                href="https://www.linkedin.com/in/samarth-kasar/"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 Contact Developer
               </Button>
