@@ -191,9 +191,23 @@ const Projects = () => {
   };
 
   const calculateProgress = (project) => {
-    if (!project.milestones || project.milestones.length === 0) return 0;
-    const completed = project.milestones.filter(m => m.status === 'completed').length;
-    return (completed / project.milestones.length) * 100;
+    // If project has milestones, calculate based on completed milestones
+    if (project.milestones && project.milestones.length > 0) {
+      const completed = project.milestones.filter(m => m.status === 'completed').length;
+      return (completed / project.milestones.length) * 100;
+    }
+    
+    // Fallback: calculate progress based on project status
+    const statusProgress = {
+      'Planning': 10,
+      'In Progress': 50,
+      'Review': 80,
+      'Completed': 100,
+      'On Hold': 25,
+      'Cancelled': 0
+    };
+    
+    return statusProgress[project.status] || 0;
   };
 
   const getDaysRemaining = (endDate) => {

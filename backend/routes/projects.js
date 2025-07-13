@@ -35,6 +35,7 @@ router.get('/', auth, async (req, res) => {
       .populate('projectManager', 'name email department')
       .populate('teamMembers.user', 'name email department')
       .populate('materialsAllocated.material', 'name serialNumber unit')
+      .populate('milestones.completedBy', 'name email')
       .populate('createdBy', 'name email')
       .sort({ createdAt: -1 })
       .skip(skip)
