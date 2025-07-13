@@ -40,6 +40,8 @@ import {
   ExpandMore as ExpandMoreIcon,
   Engineering as EngineeringIcon,
   RemoveCircle as RemoveIcon,
+  CheckCircle as ApproveIcon,
+  Launch as ReleaseIcon,
 } from '@mui/icons-material';
 
 import apiService from '../../services/apiService';
@@ -53,10 +55,14 @@ const BOM = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedBom, setSelectedBom] = useState(null);
   const [bomFormData, setBomFormData] = useState({
-    name: '',
-    description: '',
-    projectId: '',
+    project: '',
+    version: '1.0',
+    status: 'Draft',
     materials: [],
+    notes: '',
+    estimatedCompletionTime: '',
+    priority: 'Medium',
+    revisionReason: '',
   });
 
   const fetchData = async () => {
@@ -86,10 +92,14 @@ const BOM = () => {
   const handleAddBom = () => {
     setSelectedBom(null);
     setBomFormData({
-      name: '',
-      description: '',
-      projectId: '',
+      project: '',
+      version: '1.0',
+      status: 'Draft',
       materials: [],
+      notes: '',
+      estimatedCompletionTime: '',
+      priority: 'Medium',
+      revisionReason: '',
     });
     setOpenDialog(true);
   };
@@ -97,10 +107,24 @@ const BOM = () => {
   const handleEditBom = (bom) => {
     setSelectedBom(bom);
     setBomFormData({
-      name: bom.name,
-      description: bom.description || '',
-      projectId: bom.projectId?._id || '',
-      materials: bom.materials || [],
+      project: bom.project?._id || '',
+      version: bom.version || '1.0',
+      status: bom.status || 'Draft',
+      materials: bom.materials?.map(m => ({
+        material: m.material?._id || '',
+        quantity: m.quantity || 1,
+        unit: m.unit || '',
+        unitCost: m.unitCost || 0,
+        supplier: m.supplier || '',
+        leadTime: m.leadTime || 0,
+        notes: m.notes || '',
+        isAlternative: m.isAlternative || false,
+        parentMaterial: m.parentMaterial || ''
+      })) || [],
+      notes: bom.notes || '',
+      estimatedCompletionTime: bom.estimatedCompletionTime || '',
+      priority: bom.priority || 'Medium',
+      revisionReason: '',
     });
     setOpenDialog(true);
   };
@@ -109,17 +133,31 @@ const BOM = () => {
     setOpenDialog(false);
     setSelectedBom(null);
     setBomFormData({
-      name: '',
-      description: '',
-      projectId: '',
+      project: '',
+      version: '1.0',
+      status: 'Draft',
       materials: [],
+      notes: '',
+      estimatedCompletionTime: '',
+      priority: 'Medium',
+      revisionReason: '',
     });
   };
 
   const handleAddMaterial = () => {
     setBomFormData(prev => ({
       ...prev,
-      materials: [...prev.materials, { materialId: '', quantity: 1, notes: '' }]
+      materials: [...prev.materials, { 
+        material: '', 
+        quantity: 1, 
+        unit: '',
+        unitCost: 0,
+        supplier: '',
+        leadTime: 0,
+        notes: '',
+        isAlternative: false,
+        parentMaterial: ''
+      }]
     }));
   };
 
@@ -141,22 +179,105 @@ const BOM = () => {
 
   const handleSubmit = async () => {
     try {
-      if (selectedBom) {
-        await apiService.updateBOM(selectedBom._id, bomFormData);
-      } else {
-        await apiService.createBOM(bomFormData);
+      // Validation
+      if (!bomFormData.project) {
+        setError('Please select a project');
+        return;
       }
+      
+      if (bomFormData.materials.length === 0) {
+        setError('Please add at least one material');
+        return;
+      }
+
+      // Validate materials
+      for (let i = 0; i < bomFormData.materials.length; i++) {
+        const material = bomFormData.materials[i];
+        if (!material.material) {
+          setError(`Please select material for item ${i + 1}`);
+          return;
+        }
+        if (material.quantity <= 0) {
+          setError(`Please enter valid quantity for item ${i + 1}`);
+          return;
+        }
+      }
+
+      // Calculate total costs for each material
+      const processedMaterials = bomFormData.materials.map(bomMat => {
+        const materialData = materials.find(m => m._id === bomMat.material);
+        const unitCost = bomMat.unitCost || materialData?.unitPrice || 0;
+        const totalCost = bomMat.quantity * unitCost;
+        
+        return {
+          material: bomMat.material,
+          quantity: bomMat.quantity,
+          unit: bomMat.unit || materialData?.unit || 'pcs',
+          unitCost: unitCost,
+          totalCost: totalCost,
+          supplier: bomMat.supplier || materialData?.supplier?.name || 'Default Supplier',
+          leadTime: bomMat.leadTime || 0,
+          notes: bomMat.notes || '',
+          isAlternative: bomMat.isAlternative || false,
+          parentMaterial: bomMat.parentMaterial || null
+        };
+      });
+
+      const submitData = {
+        ...bomFormData,
+        materials: processedMaterials
+      };
+
+      if (selectedBom) {
+        await apiService.updateBOM(selectedBom._id, submitData);
+        setError('');
+      } else {
+        await apiService.createBOM(submitData);
+        setError('');
+      }
+      
       await fetchData();
       handleCloseDialog();
     } catch (error) {
       console.error('Error saving BOM:', error);
-      setError('Failed to save BOM');
+      setError(error.response?.data?.message || 'Failed to save BOM');
+    }
+  };
+
+  const handleApproveBom = async (bomId) => {
+    try {
+      await apiService.approveBOM(bomId);
+      setError('');
+      await fetchData();
+    } catch (error) {
+      console.error('Error approving BOM:', error);
+      setError(error.response?.data?.message || 'Failed to approve BOM');
+    }
+  };
+
+  const handleReleaseBom = async (bomId) => {
+    try {
+      const result = await apiService.releaseBOM(bomId);
+      setError('');
+      
+      // Show success message with deducted materials
+      if (result.data.deductedMaterials) {
+        const deductedList = result.data.deductedMaterials.map(m => 
+          `${m.material}: ${m.deductedQuantity} ${m.unit}`
+        ).join(', ');
+        console.log('Materials deducted from inventory:', deductedList);
+      }
+      
+      await fetchData();
+    } catch (error) {
+      console.error('Error releasing BOM:', error);
+      setError(error.response?.data?.message || 'Failed to release BOM');
     }
   };
 
   const calculateTotalCost = (bom) => {
     return bom.materials?.reduce((total, bomMaterial) => {
-      const material = materials.find(m => m._id === bomMaterial.materialId?._id);
+      const material = materials.find(m => m._id === bomMaterial.material?._id);
       return total + (material?.unitPrice || 0) * bomMaterial.quantity;
     }, 0) || 0;
   };
@@ -280,10 +401,15 @@ const BOM = () => {
                         Cost: ₹{calculateTotalCost(bom).toLocaleString()}
                       </Typography>
                     </Box>
-                    <Box>
-                      <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleEditBom(bom); }}>
-                        <EditIcon />
-                      </IconButton>
+                    <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
+                      <Chip 
+                        label="Edit" 
+                        variant="outlined" 
+                        size="small" 
+                        icon={<EditIcon />}
+                        onClick={(e) => { e.stopPropagation(); handleEditBom(bom); }}
+                        sx={{ '&:hover': { backgroundColor: 'action.hover' } }}
+                      />
                     </Box>
                   </Box>
                 </AccordionSummary>
@@ -306,7 +432,7 @@ const BOM = () => {
                           </TableHead>
                           <TableBody>
                             {bom.materials?.map((bomMaterial, index) => {
-                              const material = materials.find(m => m._id === bomMaterial.materialId?._id);
+                              const material = materials.find(m => m._id === bomMaterial.material?._id);
                               return (
                                 <TableRow key={index}>
                                   <TableCell>
@@ -378,52 +504,119 @@ const BOM = () => {
       </Card>
 
       {/* Add/Edit BOM Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="lg" fullWidth>
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="xl" fullWidth>
         <DialogTitle>
           {selectedBom ? 'Edit BOM' : 'Create New BOM'}
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="BOM Name"
-                value={bomFormData.name}
-                onChange={(e) => setBomFormData(prev => ({ ...prev, name: e.target.value }))}
-                required
-              />
+            {/* Basic Information */}
+            <Grid item xs={12}>
+              <Typography variant="h6" color="primary" gutterBottom>
+                Basic Information
+              </Typography>
             </Grid>
+            
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Project"
+                label="Project *"
                 select
-                value={bomFormData.projectId}
-                onChange={(e) => setBomFormData(prev => ({ ...prev, projectId: e.target.value }))}
+                value={bomFormData.project}
+                onChange={(e) => setBomFormData(prev => ({ ...prev, project: e.target.value }))}
+                required
+                error={!bomFormData.project}
+                helperText={!bomFormData.project ? 'Project is required' : 'Select the project this BOM belongs to'}
               >
-                <MenuItem value="">No Project</MenuItem>
+                <MenuItem value="">Select Project</MenuItem>
                 {projects.map((project) => (
                   <MenuItem key={project._id} value={project._id}>
-                    {project.name}
+                    {project.projectName || project.name} ({project.projectId})
                   </MenuItem>
                 ))}
               </TextField>
             </Grid>
+            
+            <Grid item xs={12} sm={3}>
+              <TextField
+                fullWidth
+                label="Version"
+                value={bomFormData.version}
+                onChange={(e) => setBomFormData(prev => ({ ...prev, version: e.target.value }))}
+                helperText="e.g., 1.0, 2.1"
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={3}>
+              <TextField
+                fullWidth
+                label="Status"
+                select
+                value={bomFormData.status}
+                onChange={(e) => setBomFormData(prev => ({ ...prev, status: e.target.value }))}
+              >
+                <MenuItem value="Draft">Draft</MenuItem>
+                <MenuItem value="Approved">Approved</MenuItem>
+                <MenuItem value="Released">Released</MenuItem>
+                <MenuItem value="Obsolete">Obsolete</MenuItem>
+              </TextField>
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                label="Priority"
+                select
+                value={bomFormData.priority}
+                onChange={(e) => setBomFormData(prev => ({ ...prev, priority: e.target.value }))}
+              >
+                <MenuItem value="Low">Low</MenuItem>
+                <MenuItem value="Medium">Medium</MenuItem>
+                <MenuItem value="High">High</MenuItem>
+                <MenuItem value="Critical">Critical</MenuItem>
+              </TextField>
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                label="Estimated Completion Time"
+                value={bomFormData.estimatedCompletionTime}
+                onChange={(e) => setBomFormData(prev => ({ ...prev, estimatedCompletionTime: e.target.value }))}
+                helperText="e.g., 2 weeks, 30 days"
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              {selectedBom && (
+                <TextField
+                  fullWidth
+                  label="Revision Reason"
+                  value={bomFormData.revisionReason}
+                  onChange={(e) => setBomFormData(prev => ({ ...prev, revisionReason: e.target.value }))}
+                  helperText="Why is this BOM being revised?"
+                />
+              )}
+            </Grid>
+
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Description"
-                value={bomFormData.description}
-                onChange={(e) => setBomFormData(prev => ({ ...prev, description: e.target.value }))}
+                label="Notes"
+                value={bomFormData.notes}
+                onChange={(e) => setBomFormData(prev => ({ ...prev, notes: e.target.value }))}
                 multiline
                 rows={3}
+                helperText="General notes, assembly instructions, or special requirements"
               />
             </Grid>
             
             {/* Materials Section */}
             <Grid item xs={12}>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6">Materials</Typography>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} mt={2}>
+                <Typography variant="h6" color="primary">
+                  Materials List
+                </Typography>
                 <Button
                   variant="outlined"
                   startIcon={<AddIcon />}
@@ -434,62 +627,171 @@ const BOM = () => {
                 </Button>
               </Box>
               
-              {bomFormData.materials.map((material, index) => (
-                <Card key={index} variant="outlined" sx={{ mb: 2, p: 2 }}>
-                  <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} sm={4}>
-                      <TextField
-                        fullWidth
-                        label="Material"
-                        select
-                        value={material.materialId}
-                        onChange={(e) => handleMaterialChange(index, 'materialId', e.target.value)}
-                        size="small"
-                      >
-                        {materials.map((mat) => (
-                          <MenuItem key={mat._id} value={mat._id}>
-                            {mat.name} ({mat.serialNumber})
-                          </MenuItem>
-                        ))}
-                      </TextField>
+              {bomFormData.materials.length === 0 ? (
+                <Box textAlign="center" py={4} border="2px dashed #e0e0e0" borderRadius={1}>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    No materials added yet
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={handleAddMaterial}
+                    size="small"
+                  >
+                    Add First Material
+                  </Button>
+                </Box>
+              ) : (
+                bomFormData.materials.map((material, index) => (
+                  <Card key={index} variant="outlined" sx={{ mb: 2, p: 2 }}>
+                    <Grid container spacing={2} alignItems="center">
+                      <Grid item xs={12} sm={3}>
+                        <TextField
+                          fullWidth
+                          label="Material *"
+                          select
+                          value={material.material}
+                          onChange={(e) => {
+                            handleMaterialChange(index, 'material', e.target.value);
+                            // Auto-fill unit and cost from selected material
+                            const selectedMat = materials.find(m => m._id === e.target.value);
+                            if (selectedMat) {
+                              handleMaterialChange(index, 'unit', selectedMat.unit);
+                              handleMaterialChange(index, 'unitCost', selectedMat.unitPrice);
+                              handleMaterialChange(index, 'supplier', selectedMat.supplier?.name || '');
+                            }
+                          }}
+                          size="small"
+                          error={!material.material}
+                        >
+                          <MenuItem value="">Select Material</MenuItem>
+                          {materials.map((mat) => (
+                            <MenuItem key={mat._id} value={mat._id}>
+                              {mat.name} ({mat.serialNumber}) - Available: {mat.quantityAvailable} {mat.unit}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      </Grid>
+                      
+                      <Grid item xs={12} sm={1.5}>
+                        <TextField
+                          fullWidth
+                          label="Qty *"
+                          type="number"
+                          value={material.quantity}
+                          onChange={(e) => handleMaterialChange(index, 'quantity', parseFloat(e.target.value) || 0)}
+                          size="small"
+                          inputProps={{ min: 0, step: 0.01 }}
+                          error={material.quantity <= 0}
+                        />
+                      </Grid>
+                      
+                      <Grid item xs={12} sm={1}>
+                        <TextField
+                          fullWidth
+                          label="Unit"
+                          value={material.unit}
+                          onChange={(e) => handleMaterialChange(index, 'unit', e.target.value)}
+                          size="small"
+                        />
+                      </Grid>
+                      
+                      <Grid item xs={12} sm={1.5}>
+                        <TextField
+                          fullWidth
+                          label="Unit Cost (₹)"
+                          type="number"
+                          value={material.unitCost}
+                          onChange={(e) => handleMaterialChange(index, 'unitCost', parseFloat(e.target.value) || 0)}
+                          size="small"
+                          inputProps={{ min: 0, step: 0.01 }}
+                        />
+                      </Grid>
+                      
+                      <Grid item xs={12} sm={1.5}>
+                        <TextField
+                          fullWidth
+                          label="Supplier"
+                          value={material.supplier}
+                          onChange={(e) => handleMaterialChange(index, 'supplier', e.target.value)}
+                          size="small"
+                        />
+                      </Grid>
+                      
+                      <Grid item xs={12} sm={1}>
+                        <TextField
+                          fullWidth
+                          label="Lead Time (days)"
+                          type="number"
+                          value={material.leadTime}
+                          onChange={(e) => handleMaterialChange(index, 'leadTime', parseInt(e.target.value) || 0)}
+                          size="small"
+                          inputProps={{ min: 0 }}
+                        />
+                      </Grid>
+                      
+                      <Grid item xs={12} sm={1.5}>
+                        <TextField
+                          fullWidth
+                          label="Notes"
+                          value={material.notes}
+                          onChange={(e) => handleMaterialChange(index, 'notes', e.target.value)}
+                          size="small"
+                          placeholder="Optional notes"
+                        />
+                      </Grid>
+                      
+                      <Grid item xs={12} sm={0.5}>
+                        <IconButton
+                          color="error"
+                          onClick={() => handleRemoveMaterial(index)}
+                          size="small"
+                          title="Remove material"
+                        >
+                          <RemoveIcon />
+                        </IconButton>
+                      </Grid>
+
+                      {/* Cost Summary for this material */}
+                      <Grid item xs={12}>
+                        <Box sx={{ bgcolor: 'grey.50', p: 1, borderRadius: 1 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            Total Cost: ₹{((material.quantity || 0) * (material.unitCost || 0)).toFixed(2)} | 
+                            Available Stock: {materials.find(m => m._id === material.material)?.quantityAvailable || 0} {material.unit}
+                            {materials.find(m => m._id === material.material)?.quantityAvailable < material.quantity && (
+                              <Chip label="Insufficient Stock" color="error" size="small" sx={{ ml: 1 }} />
+                            )}
+                          </Typography>
+                        </Box>
+                      </Grid>
                     </Grid>
-                    <Grid item xs={12} sm={2}>
-                      <TextField
-                        fullWidth
-                        label="Quantity"
-                        type="number"
-                        value={material.quantity}
-                        onChange={(e) => handleMaterialChange(index, 'quantity', parseInt(e.target.value) || 0)}
-                        size="small"
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                      <TextField
-                        fullWidth
-                        label="Notes"
-                        value={material.notes}
-                        onChange={(e) => handleMaterialChange(index, 'notes', e.target.value)}
-                        size="small"
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={2}>
-                      <IconButton
-                        color="error"
-                        onClick={() => handleRemoveMaterial(index)}
-                        size="small"
-                      >
-                        <RemoveIcon />
-                      </IconButton>
-                    </Grid>
-                  </Grid>
-                </Card>
-              ))}
+                  </Card>
+                ))
+              )}
+
+              {/* Total Cost Summary */}
+              {bomFormData.materials.length > 0 && (
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'primary.50', borderRadius: 1 }}>
+                  <Typography variant="h6" color="primary">
+                    Total BOM Cost: ₹{bomFormData.materials.reduce((total, mat) => 
+                      total + ((mat.quantity || 0) * (mat.unitCost || 0)), 0
+                    ).toFixed(2)}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Materials: {bomFormData.materials.length} items
+                  </Typography>
+                </Box>
+              )}
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit}>
+          <Button 
+            variant="contained" 
+            onClick={handleSubmit}
+            disabled={!bomFormData.project || bomFormData.materials.length === 0}
+          >
             {selectedBom ? 'Update' : 'Create'} BOM
           </Button>
         </DialogActions>

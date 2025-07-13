@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const BOM = require('../models/BOM');
 const Material = require('../models/Material');
 const Project = require('../models/Project');
@@ -256,10 +257,11 @@ router.patch('/:id/approve', auth, authorize('admin', 'manager'), async (req, re
   }
 });
 
-// Release BOM
+// Release BOM and deduct inventory
 router.patch('/:id/release', auth, authorize('admin', 'manager'), async (req, res) => {
   try {
-    const bom = await BOM.findById(req.params.id);
+    const bom = await BOM.findById(req.params.id)
+      .populate('materials.material', 'name serialNumber quantityAvailable unit');
     
     if (!bom) {
       return res.status(404).json({ message: 'BOM not found' });
@@ -271,15 +273,73 @@ router.patch('/:id/release', auth, authorize('admin', 'manager'), async (req, re
       });
     }
 
-    bom.status = 'Released';
-    bom.updatedBy = req.user._id;
+    // Check material availability before releasing
+    const insufficientMaterials = [];
+    for (const bomMaterial of bom.materials) {
+      const material = bomMaterial.material;
+      if (!material) {
+        insufficientMaterials.push(`Material ID ${bomMaterial.material} not found`);
+        continue;
+      }
+      
+      if (material.quantityAvailable < bomMaterial.quantity) {
+        insufficientMaterials.push(
+          `${material.name} (${material.serialNumber}): Required ${bomMaterial.quantity}, Available ${material.quantityAvailable}`
+        );
+      }
+    }
 
-    await bom.save();
+    if (insufficientMaterials.length > 0) {
+      return res.status(400).json({
+        message: 'Insufficient materials in inventory',
+        insufficientMaterials
+      });
+    }
 
-    res.json({
-      message: 'BOM released successfully',
-      bom
-    });
+    // Start transaction for inventory deduction
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      // Deduct materials from inventory
+      for (const bomMaterial of bom.materials) {
+        await Material.findByIdAndUpdate(
+          bomMaterial.material._id,
+          {
+            $inc: { quantityAvailable: -bomMaterial.quantity },
+            $set: { 
+              lastUpdated: new Date(),
+              updatedBy: req.user._id 
+            }
+          },
+          { session }
+        );
+      }
+
+      // Update BOM status
+      bom.status = 'Released';
+      bom.updatedBy = req.user._id;
+      await bom.save({ session });
+
+      await session.commitTransaction();
+
+      res.json({
+        message: 'BOM released successfully and materials deducted from inventory',
+        bom,
+        deductedMaterials: bom.materials.map(m => ({
+          material: m.material.name,
+          deductedQuantity: m.quantity,
+          unit: m.unit
+        }))
+      });
+
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
+
   } catch (error) {
     console.error('Release BOM error:', error);
     res.status(500).json({ 
