@@ -257,6 +257,7 @@ const BOM = () => {
 
   const handleReleaseBom = async (bomId) => {
     try {
+      console.log('Releasing BOM with ID:', bomId);
       const result = await apiService.releaseBOM(bomId);
       setError('');
       
@@ -265,13 +266,41 @@ const BOM = () => {
         const deductedList = result.data.deductedMaterials.map(m => 
           `${m.material}: ${m.deductedQuantity} ${m.unit}`
         ).join(', ');
-        console.log('Materials deducted from inventory:', deductedList);
+        alert(`BOM released successfully! Materials deducted: ${deductedList}`);
       }
       
+      // Refresh all data including materials to show updated quantities
       await fetchData();
     } catch (error) {
       console.error('Error releasing BOM:', error);
+      console.error('Full error:', error.response?.data);
       setError(error.response?.data?.message || 'Failed to release BOM');
+    }
+  };
+
+  const handleObsoleteBom = async (bomId) => {
+    if (window.confirm('Are you sure you want to mark this BOM as obsolete? This action will make it inactive.')) {
+      try {
+        await apiService.obsoleteBOM(bomId);
+        setError('');
+        await fetchData();
+      } catch (error) {
+        console.error('Error marking BOM as obsolete:', error);
+        setError(error.response?.data?.message || 'Failed to mark BOM as obsolete');
+      }
+    }
+  };
+
+  const handleDeleteBom = async (bomId) => {
+    if (window.confirm('Are you sure you want to delete this BOM? This action cannot be undone.')) {
+      try {
+        await apiService.deleteBOM(bomId);
+        setError('');
+        await fetchData();
+      } catch (error) {
+        console.error('Error deleting BOM:', error);
+        setError(error.response?.data?.message || 'Failed to delete BOM');
+      }
     }
   };
 
@@ -360,7 +389,7 @@ const BOM = () => {
           <Card>
             <CardContent>
               <Typography variant="h4" fontWeight={700} color="warning.main">
-                {new Set(boms.map(bom => bom.projectId?._id).filter(Boolean)).size}
+                {new Set(boms.map(bom => bom.project?._id).filter(Boolean)).size}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Active Projects
@@ -393,15 +422,67 @@ const BOM = () => {
                   <Box display="flex" justifyContent="space-between" alignItems="center" width="100%">
                     <Box>
                       <Typography variant="h6" fontWeight={600}>
-                        {bom.name}
+                        {bom.bomId || `BOM-${bom._id?.slice(-6)}`}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Project: {bom.projectId?.name || 'No Project'} • 
+                        Project: {bom.project?.projectName || bom.project?.name || 'No Project'} • 
                         Materials: {bom.materials?.length || 0} • 
                         Cost: ₹{calculateTotalCost(bom).toLocaleString()}
                       </Typography>
                     </Box>
-                    <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
+                    <Box sx={{ mr: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip
+                        label={bom.status}
+                        color={
+                          bom.status === 'Draft' ? 'default' :
+                          bom.status === 'Approved' ? 'primary' :
+                          bom.status === 'Released' ? 'success' :
+                          'error'
+                        }
+                        size="small"
+                        sx={{ minWidth: '80px' }}
+                      />
+                      {bom.status === 'Draft' && (
+                        <Chip 
+                          label="Approve" 
+                          variant="outlined" 
+                          size="small" 
+                          icon={<ApproveIcon />}
+                          onClick={(e) => { e.stopPropagation(); handleApproveBom(bom._id); }}
+                          sx={{ '&:hover': { backgroundColor: 'success.light', color: 'white' } }}
+                        />
+                      )}
+                      {bom.status === 'Approved' && (
+                        <Chip 
+                          label="Release" 
+                          variant="outlined" 
+                          size="small" 
+                          icon={<ReleaseIcon />}
+                          onClick={(e) => { e.stopPropagation(); handleReleaseBom(bom._id); }}
+                          sx={{ '&:hover': { backgroundColor: 'primary.light', color: 'white' } }}
+                        />
+                      )}
+                      {(bom.status === 'Released') && (
+                        <Chip 
+                          label="Obsolete" 
+                          variant="outlined" 
+                          size="small" 
+                          color="error"
+                          onClick={(e) => { e.stopPropagation(); handleObsoleteBom(bom._id); }}
+                          sx={{ '&:hover': { backgroundColor: 'error.light', color: 'white' } }}
+                        />
+                      )}
+                      {(bom.status === 'Draft' || bom.status === 'Obsolete') && (
+                        <Chip 
+                          label="Delete" 
+                          variant="outlined" 
+                          size="small" 
+                          color="error"
+                          icon={<DeleteIcon />}
+                          onClick={(e) => { e.stopPropagation(); handleDeleteBom(bom._id); }}
+                          sx={{ '&:hover': { backgroundColor: 'error.main', color: 'white' } }}
+                        />
+                      )}
                       <Chip 
                         label="Edit" 
                         variant="outlined" 
@@ -469,6 +550,18 @@ const BOM = () => {
                       <List dense>
                         <ListItem>
                           <ListItemText 
+                            primary="Status" 
+                            secondary={bom.status}
+                          />
+                        </ListItem>
+                        <ListItem>
+                          <ListItemText 
+                            primary="Version" 
+                            secondary={bom.version || '1.0'}
+                          />
+                        </ListItem>
+                        <ListItem>
+                          <ListItemText 
                             primary="Total Materials" 
                             secondary={bom.materials?.length || 0}
                           />
@@ -485,11 +578,19 @@ const BOM = () => {
                             secondary={new Date(bom.createdAt).toLocaleDateString()}
                           />
                         </ListItem>
-                        {bom.description && (
+                        {bom.approvedBy && (
                           <ListItem>
                             <ListItemText 
-                              primary="Description" 
-                              secondary={bom.description}
+                              primary="Approved By" 
+                              secondary={bom.approvedBy.name || 'Unknown'}
+                            />
+                          </ListItem>
+                        )}
+                        {bom.notes && (
+                          <ListItem>
+                            <ListItemText 
+                              primary="Notes" 
+                              secondary={bom.notes}
                             />
                           </ListItem>
                         )}

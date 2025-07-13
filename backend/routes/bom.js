@@ -260,12 +260,21 @@ router.patch('/:id/approve', auth, authorize('admin', 'manager'), async (req, re
 // Release BOM and deduct inventory
 router.patch('/:id/release', auth, authorize('admin', 'manager'), async (req, res) => {
   try {
+    console.log('Release BOM request received for ID:', req.params.id);
+    console.log('User:', req.user ? req.user._id : 'No user found');
+    
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: 'User authentication required' });
+    }
+    
     const bom = await BOM.findById(req.params.id)
       .populate('materials.material', 'name serialNumber quantityAvailable unit');
     
     if (!bom) {
       return res.status(404).json({ message: 'BOM not found' });
     }
+
+    console.log(`Attempting to release BOM ${bom.bomId} with status: ${bom.status}`);
 
     if (bom.status !== 'Approved') {
       return res.status(400).json({ 
@@ -282,6 +291,8 @@ router.patch('/:id/release', auth, authorize('admin', 'manager'), async (req, re
         continue;
       }
       
+      console.log(`Checking material ${material.name}: Required ${bomMaterial.quantity}, Available ${material.quantityAvailable}`);
+      
       if (material.quantityAvailable < bomMaterial.quantity) {
         insufficientMaterials.push(
           `${material.name} (${material.serialNumber}): Required ${bomMaterial.quantity}, Available ${material.quantityAvailable}`
@@ -296,14 +307,19 @@ router.patch('/:id/release', auth, authorize('admin', 'manager'), async (req, re
       });
     }
 
-    // Start transaction for inventory deduction
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
+    // Update materials inventory (without transaction for standalone MongoDB)
+    console.log('Updating material inventory...');
+    
     try {
       // Deduct materials from inventory
       for (const bomMaterial of bom.materials) {
-        await Material.findByIdAndUpdate(
+        console.log(`Deducting ${bomMaterial.quantity} units of ${bomMaterial.material.name}`);
+        
+        if (!bomMaterial.material || !bomMaterial.material._id) {
+          throw new Error(`Invalid material reference for material in BOM`);
+        }
+        
+        const updateResult = await Material.findByIdAndUpdate(
           bomMaterial.material._id,
           {
             $inc: { quantityAvailable: -bomMaterial.quantity },
@@ -312,16 +328,22 @@ router.patch('/:id/release', auth, authorize('admin', 'manager'), async (req, re
               updatedBy: req.user._id 
             }
           },
-          { session }
+          { new: true }
         );
+        
+        if (!updateResult) {
+          throw new Error(`Failed to update material: ${bomMaterial.material.name}`);
+        }
+        
+        console.log(`Updated material ${bomMaterial.material.name}: New quantity: ${updateResult.quantityAvailable}`);
       }
 
       // Update BOM status
+      console.log('Updating BOM status to Released...');
       bom.status = 'Released';
       bom.updatedBy = req.user._id;
-      await bom.save({ session });
-
-      await session.commitTransaction();
+      await bom.save();
+      console.log('BOM status updated successfully');
 
       res.json({
         message: 'BOM released successfully and materials deducted from inventory',
@@ -334,16 +356,53 @@ router.patch('/:id/release', auth, authorize('admin', 'manager'), async (req, re
       });
 
     } catch (error) {
-      await session.abortTransaction();
+      console.error('Material update error:', error);
+      console.error('Material update error stack:', error.stack);
       throw error;
-    } finally {
-      session.endSession();
     }
 
   } catch (error) {
     console.error('Release BOM error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ 
       message: 'Error releasing BOM', 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
+// Mark BOM as obsolete
+router.patch('/:id/obsolete', auth, authorize('admin', 'manager'), async (req, res) => {
+  try {
+    const bom = await BOM.findById(req.params.id);
+    
+    if (!bom) {
+      return res.status(404).json({ message: 'BOM not found' });
+    }
+
+    if (bom.status === 'Draft') {
+      return res.status(400).json({ 
+        message: 'Cannot mark draft BOM as obsolete. Delete it instead.' 
+      });
+    }
+
+    bom.status = 'Obsolete';
+    bom.updatedBy = req.user._id;
+    await bom.save();
+
+    const populatedBOM = await BOM.findById(bom._id)
+      .populate('project', 'projectId projectName')
+      .populate('updatedBy', 'name email');
+
+    res.json({
+      message: 'BOM marked as obsolete successfully',
+      bom: populatedBOM
+    });
+  } catch (error) {
+    console.error('Obsolete BOM error:', error);
+    res.status(500).json({ 
+      message: 'Error marking BOM as obsolete', 
       error: error.message 
     });
   }

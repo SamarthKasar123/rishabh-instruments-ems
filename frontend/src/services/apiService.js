@@ -202,6 +202,10 @@ class ApiService {
     return this.api.patch(`/bom/${id}/release`);
   }
 
+  obsoleteBOM(id) {
+    return this.api.patch(`/bom/${id}/obsolete`);
+  }
+
   getBOMCostAnalysis(id) {
     return this.api.get(`/bom/${id}/cost-analysis`);
   }
