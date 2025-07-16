@@ -68,6 +68,7 @@ const corsOptions = {
       'http://localhost:3001', 
       'http://127.0.0.1:3000', 
       'http://127.0.0.1:3001',
+      process.env.CLIENT_URL, // Add production frontend URL
       undefined // for requests with no origin
     ];
     
@@ -75,6 +76,7 @@ const corsOptions = {
       callback(null, true);
     } else {
       console.log('❌ CORS blocked origin:', origin);
+      console.log('🔍 Allowed origins:', allowedOrigins);
       callback(new Error('Not allowed by CORS'));
     }
   },
