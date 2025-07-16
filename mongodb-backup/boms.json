@@ -1,0 +1,440 @@
+[
+  {
+    "_id": "6873726160cc66fb8aa91abc",
+    "project": "68736f95106bd7c4a2c9b2dd",
+    "version": "1.0",
+    "status": "Obsolete",
+    "materials": [
+      {
+        "material": "687365e31348cca4431559c3",
+        "quantity": 2,
+        "unit": "pcs",
+        "unitCost": 400,
+        "totalCost": 800,
+        "supplier": "Mohanlala",
+        "leadTime": 7,
+        "notes": "Test material for BOM creation",
+        "isAlternative": false,
+        "_id": "6873726160cc66fb8aa91abd"
+      }
+    ],
+    "totalCost": 800,
+    "notes": "This is a test BOM created for testing purposes",
+    "isActive": false,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "revisionHistory": [],
+    "createdAt": "2025-07-13T08:46:25.056Z",
+    "updatedAt": "2025-07-13T11:28:44.046Z",
+    "bomId": "BOM-000001",
+    "__v": 0,
+    "approvedBy": "68735f5c5a0c9e26bf98ab02",
+    "approvedDate": "2025-07-13T09:42:50.797Z",
+    "updatedBy": "68735f5c5a0c9e26bf98ab02",
+    "obsoleteDate": "2025-07-13T09:43:25.615Z"
+  },
+  {
+    "_id": "6873746845ec7db16910ebc8",
+    "project": "68736f95106bd7c4a2c9b2dd",
+    "version": "1.0",
+    "status": "Obsolete",
+    "materials": [
+      {
+        "material": "687365e31348cca4431559c3",
+        "quantity": 2,
+        "unit": "pcs",
+        "unitCost": 400,
+        "totalCost": 800,
+        "supplier": "Mohanlala",
+        "leadTime": 5,
+        "notes": "Test material for BOM",
+        "isAlternative": false,
+        "_id": "6873746845ec7db16910ebc9"
+      }
+    ],
+    "totalCost": 800,
+    "notes": "Test BOM created via API test",
+    "isActive": false,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "revisionHistory": [],
+    "createdAt": "2025-07-13T08:55:04.164Z",
+    "updatedAt": "2025-07-13T11:28:40.925Z",
+    "bomId": "BOM-000002",
+    "__v": 0,
+    "approvedBy": "68735f5c5a0c9e26bf98ab02",
+    "approvedDate": "2025-07-13T09:42:43.270Z",
+    "updatedBy": "68735f5c5a0c9e26bf98ab02",
+    "obsoleteDate": "2025-07-13T09:43:23.620Z"
+  },
+  {
+    "_id": "687375d563d09084543c4028",
+    "project": "68736f95106bd7c4a2c9b2db",
+    "version": "1.0",
+    "status": "Obsolete",
+    "materials": [
+      {
+        "material": "6873658ae85334963a553b9f",
+        "quantity": 20,
+        "unit": "pcs",
+        "unitCost": 15.5,
+        "totalCost": 310,
+        "supplier": "Test Supplier",
+        "leadTime": 0,
+        "notes": "",
+        "isAlternative": false,
+        "parentMaterial": null,
+        "_id": "6873761d63d09084543c40c8"
+      },
+      {
+        "material": "687365e31348cca4431559c3",
+        "quantity": 25,
+        "unit": "pcs",
+        "unitCost": 400,
+        "totalCost": 10000,
+        "supplier": "Mohanlala",
+        "leadTime": 0,
+        "notes": "",
+        "isAlternative": false,
+        "parentMaterial": null,
+        "_id": "6873761d63d09084543c40c9"
+      }
+    ],
+    "totalCost": 10310,
+    "notes": "nothing",
+    "isActive": false,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "revisionHistory": [
+      {
+        "version": "1.0",
+        "changes": "Materials updated",
+        "changedBy": "68735f5c5a0c9e26bf98ab02",
+        "changeDate": "2025-07-13T09:02:04.902Z",
+        "_id": "6873760c63d09084543c409b"
+      },
+      {
+        "version": "1.0",
+        "changes": "Materials updated",
+        "changedBy": "68735f5c5a0c9e26bf98ab02",
+        "changeDate": "2025-07-13T09:02:21.389Z",
+        "_id": "6873761d63d09084543c40c7"
+      }
+    ],
+    "createdAt": "2025-07-13T09:01:09.155Z",
+    "updatedAt": "2025-07-13T11:28:37.933Z",
+    "bomId": "BOM-000003",
+    "__v": 2,
+    "updatedBy": "68735f5c5a0c9e26bf98ab02",
+    "obsoleteDate": "2025-07-13T09:42:26.210Z"
+  },
+  {
+    "_id": "68737c68750d14126b129cf4",
+    "project": "68736f95106bd7c4a2c9b2df",
+    "version": "1.0",
+    "status": "Obsolete",
+    "materials": [
+      {
+        "material": "6873658ae85334963a553b9f",
+        "quantity": 35,
+        "unit": "pcs",
+        "unitCost": 15.5,
+        "totalCost": 542.5,
+        "supplier": "Test Supplier",
+        "leadTime": 0,
+        "notes": "",
+        "isAlternative": false,
+        "parentMaterial": null,
+        "_id": "68737ff53f9e0cfd3a046904"
+      },
+      {
+        "material": "687365e31348cca4431559c3",
+        "quantity": 15,
+        "unit": "pcs",
+        "unitCost": 400,
+        "totalCost": 6000,
+        "supplier": "Mohanlala",
+        "leadTime": 0,
+        "notes": "",
+        "isAlternative": false,
+        "parentMaterial": null,
+        "_id": "68737ff53f9e0cfd3a046905"
+      }
+    ],
+    "totalCost": 6542.5,
+    "notes": "nothing",
+    "isActive": false,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "revisionHistory": [
+      {
+        "version": "1.0",
+        "changes": "Materials updated",
+        "changedBy": "68735f5c5a0c9e26bf98ab02",
+        "changeDate": "2025-07-13T09:30:22.411Z",
+        "_id": "68737cae2d891ba7284e50cd"
+      },
+      {
+        "version": "1.0",
+        "changes": "Materials updated",
+        "changedBy": "68735f5c5a0c9e26bf98ab02",
+        "changeDate": "2025-07-13T09:30:40.653Z",
+        "_id": "68737cc02d891ba7284e5145"
+      },
+      {
+        "version": "1.0",
+        "changes": "Materials updated",
+        "changedBy": "68735f5c5a0c9e26bf98ab02",
+        "changeDate": "2025-07-13T09:44:21.954Z",
+        "_id": "68737ff53f9e0cfd3a046903"
+      }
+    ],
+    "createdAt": "2025-07-13T09:29:12.285Z",
+    "updatedAt": "2025-07-13T11:32:40.937Z",
+    "bomId": "BOM-000004",
+    "__v": 3,
+    "updatedBy": "68735f5c5a0c9e26bf98ab02",
+    "obsoleteDate": "2025-07-13T09:42:03.970Z"
+  },
+  {
+    "_id": "6873999bc825062bd7971421",
+    "project": "68736f95106bd7c4a2c9b2d7",
+    "version": "1.0",
+    "status": "Obsolete",
+    "materials": [
+      {
+        "material": "6873658ae85334963a553b9f",
+        "quantity": 15,
+        "unit": "pcs",
+        "unitCost": 15.5,
+        "totalCost": 232.5,
+        "supplier": "Test Supplier",
+        "leadTime": 0,
+        "notes": "",
+        "isAlternative": false,
+        "parentMaterial": null,
+        "_id": "68739c88f1f435d6c0e17e36"
+      },
+      {
+        "material": "687365e31348cca4431559c3",
+        "quantity": 20,
+        "unit": "pcs",
+        "unitCost": 400,
+        "totalCost": 8000,
+        "supplier": "Mohanlala",
+        "leadTime": 0,
+        "notes": "",
+        "isAlternative": false,
+        "parentMaterial": null,
+        "_id": "68739c88f1f435d6c0e17e37"
+      }
+    ],
+    "totalCost": 8232.5,
+    "notes": "nothing",
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "revisionHistory": [
+      {
+        "version": "1.0",
+        "changes": "Materials updated",
+        "changedBy": "68735f5c5a0c9e26bf98ab02",
+        "changeDate": "2025-07-13T11:35:25.425Z",
+        "_id": "687399fd4405afef7901b4fe"
+      },
+      {
+        "version": "1.0",
+        "changes": "Materials updated",
+        "changedBy": "68735f5c5a0c9e26bf98ab02",
+        "changeDate": "2025-07-13T11:46:16.736Z",
+        "_id": "68739c88f1f435d6c0e17e35"
+      }
+    ],
+    "createdAt": "2025-07-13T11:33:47.977Z",
+    "updatedAt": "2025-07-13T11:47:54.369Z",
+    "bomId": "BOM-000005",
+    "__v": 2,
+    "approvedBy": "68735f5c5a0c9e26bf98ab02",
+    "approvedDate": "2025-07-13T11:34:08.152Z",
+    "updatedBy": "68735f5c5a0c9e26bf98ab02"
+  },
+  {
+    "_id": "68739f21bb4007985ddc305e",
+    "project": "68736f95106bd7c4a2c9b2df",
+    "version": "1.0",
+    "status": "Obsolete",
+    "materials": [
+      {
+        "material": "6873658ae85334963a553b9f",
+        "quantity": 5,
+        "unit": "pcs",
+        "unitCost": 15.5,
+        "totalCost": 77.5,
+        "supplier": "Test Supplier",
+        "leadTime": 0,
+        "notes": "",
+        "isAlternative": false,
+        "parentMaterial": null,
+        "_id": "68739f21bb4007985ddc305f"
+      },
+      {
+        "material": "687365e31348cca4431559c3",
+        "quantity": 5,
+        "unit": "pcs",
+        "unitCost": 400,
+        "totalCost": 2000,
+        "supplier": "Mohanlala",
+        "leadTime": 0,
+        "notes": "",
+        "isAlternative": false,
+        "parentMaterial": null,
+        "_id": "68739f21bb4007985ddc3060"
+      }
+    ],
+    "totalCost": 2077.5,
+    "notes": "dnnndnndndn",
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "revisionHistory": [],
+    "createdAt": "2025-07-13T11:57:21.933Z",
+    "updatedAt": "2025-07-13T11:59:26.442Z",
+    "bomId": "BOM-000006",
+    "__v": 0,
+    "approvedBy": "68735f5c5a0c9e26bf98ab02",
+    "approvedDate": "2025-07-13T11:57:28.344Z",
+    "updatedBy": "68735f5c5a0c9e26bf98ab02"
+  },
+  {
+    "_id": "6873a2537c8a759123b3a1c9",
+    "project": "68736f95106bd7c4a2c9b2dd",
+    "version": "1.0",
+    "status": "Obsolete",
+    "materials": [
+      {
+        "material": "6873658ae85334963a553b9f",
+        "quantity": 1,
+        "unit": "pcs",
+        "unitCost": 15.5,
+        "totalCost": 15.5,
+        "supplier": "Test Supplier",
+        "leadTime": 0,
+        "notes": "",
+        "isAlternative": false,
+        "parentMaterial": null,
+        "_id": "6873a2537c8a759123b3a1ca"
+      },
+      {
+        "material": "687365e31348cca4431559c3",
+        "quantity": 3,
+        "unit": "pcs",
+        "unitCost": 400,
+        "totalCost": 1200,
+        "supplier": "Mohanlala",
+        "leadTime": 0,
+        "notes": "",
+        "isAlternative": false,
+        "parentMaterial": null,
+        "_id": "6873a2537c8a759123b3a1cb"
+      }
+    ],
+    "totalCost": 1215.5,
+    "notes": "nhnhnnhnn",
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "revisionHistory": [],
+    "createdAt": "2025-07-13T12:10:59.868Z",
+    "updatedAt": "2025-07-13T12:11:23.912Z",
+    "bomId": "BOM-000007",
+    "__v": 0,
+    "approvedBy": "68735f5c5a0c9e26bf98ab02",
+    "approvedDate": "2025-07-13T12:11:03.589Z",
+    "updatedBy": "68735f5c5a0c9e26bf98ab02"
+  },
+  {
+    "_id": "6873a3457c8a759123b3a394",
+    "project": "68736f95106bd7c4a2c9b2db",
+    "version": "1.0",
+    "status": "Obsolete",
+    "materials": [
+      {
+        "material": "6873658ae85334963a553b9f",
+        "quantity": 2,
+        "unit": "pcs",
+        "unitCost": 15.5,
+        "totalCost": 31,
+        "supplier": "Test Supplier",
+        "leadTime": 0,
+        "notes": "",
+        "isAlternative": false,
+        "parentMaterial": null,
+        "_id": "6873a3457c8a759123b3a395"
+      },
+      {
+        "material": "687365e31348cca4431559c3",
+        "quantity": 2,
+        "unit": "pcs",
+        "unitCost": 400,
+        "totalCost": 800,
+        "supplier": "Mohanlala",
+        "leadTime": 0,
+        "notes": "",
+        "isAlternative": false,
+        "parentMaterial": null,
+        "_id": "6873a3457c8a759123b3a396"
+      }
+    ],
+    "totalCost": 831,
+    "notes": "harshal bhai on top",
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "revisionHistory": [],
+    "createdAt": "2025-07-13T12:15:01.547Z",
+    "updatedAt": "2025-07-13T12:15:16.280Z",
+    "bomId": "BOM-000008",
+    "__v": 0,
+    "approvedBy": "68735f5c5a0c9e26bf98ab02",
+    "approvedDate": "2025-07-13T12:15:03.876Z",
+    "updatedBy": "68735f5c5a0c9e26bf98ab02"
+  },
+  {
+    "_id": "6873f76223141eeb26eb989e",
+    "project": "68736f95106bd7c4a2c9b2d9",
+    "version": "1.0",
+    "status": "Obsolete",
+    "materials": [
+      {
+        "material": "6873658ae85334963a553b9f",
+        "quantity": 15,
+        "unit": "pcs",
+        "unitCost": 15.5,
+        "totalCost": 232.5,
+        "supplier": "Test Supplier",
+        "leadTime": 0,
+        "notes": "",
+        "isAlternative": false,
+        "parentMaterial": null,
+        "_id": "6873f76223141eeb26eb989f"
+      },
+      {
+        "material": "687365e31348cca4431559c3",
+        "quantity": 4,
+        "unit": "pcs",
+        "unitCost": 400,
+        "totalCost": 1600,
+        "supplier": "Mohanlala",
+        "leadTime": 0,
+        "notes": "",
+        "isAlternative": false,
+        "parentMaterial": null,
+        "_id": "6873f76223141eeb26eb98a0"
+      }
+    ],
+    "totalCost": 1832.5,
+    "notes": "",
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "revisionHistory": [],
+    "createdAt": "2025-07-13T18:13:54.310Z",
+    "updatedAt": "2025-07-13T18:14:49.542Z",
+    "bomId": "BOM-000009",
+    "__v": 0,
+    "approvedBy": "68735f5c5a0c9e26bf98ab02",
+    "approvedDate": "2025-07-13T18:14:07.572Z",
+    "updatedBy": "68735f5c5a0c9e26bf98ab02"
+  }
+]

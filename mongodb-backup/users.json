@@ -1,0 +1,39 @@
+[
+  {
+    "_id": "68735f5c5a0c9e26bf98ab02",
+    "name": "Admin User",
+    "email": "admin@rishabh.co.in",
+    "password": "$2b$12$hex.vDJtjLqyco881A8A5eVgxVCqg8Ul5YF04XWphcuIlYo4kgJC2",
+    "role": "admin",
+    "department": "MID",
+    "isActive": true,
+    "createdAt": "2025-07-13T07:25:16.502Z",
+    "updatedAt": "2025-07-16T10:29:59.887Z",
+    "__v": 0,
+    "lastLogin": "2025-07-16T10:29:59.827Z"
+  },
+  {
+    "_id": "68735f5e5a0c9e26bf98ab04",
+    "name": "Manager User",
+    "email": "manager@rishabh.co.in",
+    "password": "$2b$12$uS51k1LJwt0CHeE8djsKBOgoQtOo9edSpzrb1pPYyD4J7ABsMJNOu",
+    "role": "manager",
+    "department": "CAM Switch",
+    "isActive": true,
+    "createdAt": "2025-07-13T07:25:18.576Z",
+    "updatedAt": "2025-07-13T07:25:18.576Z",
+    "__v": 0
+  },
+  {
+    "_id": "68735f605a0c9e26bf98ab06",
+    "name": "Operator User",
+    "email": "operator@rishabh.co.in",
+    "password": "$2b$12$n9Bg2hY7Kvb.O5IdxTksF.GQz8YDelNQKF/8X8wJpiqCpDrhndXty",
+    "role": "operator",
+    "department": "Transducer",
+    "isActive": true,
+    "createdAt": "2025-07-13T07:25:20.310Z",
+    "updatedAt": "2025-07-13T07:25:20.310Z",
+    "__v": 0
+  }
+]

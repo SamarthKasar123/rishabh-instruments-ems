@@ -1,0 +1,202 @@
+[
+  {
+    "_id": "68736f95106bd7c4a2c9b2d7",
+    "projectId": "PROJ-000001",
+    "projectName": "Digital Multimeter Enhancement",
+    "description": "Upgrade existing digital multimeter with new features and improved accuracy",
+    "department": "MID",
+    "projectType": "Development",
+    "status": "In Progress",
+    "priority": "High",
+    "startDate": "2025-01-01T00:00:00.000Z",
+    "expectedEndDate": "2025-06-30T00:00:00.000Z",
+    "budget": {
+      "allocated": 500000,
+      "spent": 125000
+    },
+    "projectManager": "68735f5c5a0c9e26bf98ab02",
+    "teamMembers": [
+      {
+        "user": "68735f5c5a0c9e26bf98ab02",
+        "role": "Lead",
+        "assignedDate": "2025-01-01T00:00:00.000Z",
+        "_id": "68736f95106bd7c4a2c9b2d8"
+      }
+    ],
+    "completionPercentage": 0,
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "materialsAllocated": [],
+    "milestones": [],
+    "documents": [],
+    "__v": 0,
+    "createdAt": "2025-07-13T08:34:29.862Z",
+    "updatedAt": "2025-07-13T08:34:29.862Z"
+  },
+  {
+    "_id": "68736f95106bd7c4a2c9b2d9",
+    "projectId": "PROJ-000002",
+    "projectName": "CAM Switch Automation System",
+    "description": "Automated testing system for CAM switch quality control",
+    "department": "CAM Switch",
+    "projectType": "Automation",
+    "status": "Planning",
+    "priority": "Medium",
+    "startDate": "2025-02-15T00:00:00.000Z",
+    "expectedEndDate": "2025-08-15T00:00:00.000Z",
+    "budget": {
+      "allocated": 750000,
+      "spent": 0
+    },
+    "projectManager": "68735f5c5a0c9e26bf98ab02",
+    "teamMembers": [
+      {
+        "user": "68735f5c5a0c9e26bf98ab02",
+        "role": "Lead",
+        "assignedDate": "2025-02-15T00:00:00.000Z",
+        "_id": "68736f95106bd7c4a2c9b2da"
+      }
+    ],
+    "completionPercentage": 0,
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "materialsAllocated": [],
+    "milestones": [],
+    "documents": [],
+    "__v": 0,
+    "createdAt": "2025-07-13T08:34:29.866Z",
+    "updatedAt": "2025-07-13T08:34:29.866Z"
+  },
+  {
+    "_id": "68736f95106bd7c4a2c9b2db",
+    "projectId": "PROJ-000003",
+    "projectName": "Transducer Calibration Equipment",
+    "description": "New equipment for precise transducer calibration and testing",
+    "department": "Transducer",
+    "projectType": "Testing",
+    "status": "Planning",
+    "priority": "High",
+    "startDate": "2025-03-01T00:00:00.000Z",
+    "expectedEndDate": "2025-09-30T00:00:00.000Z",
+    "budget": {
+      "allocated": 1200000,
+      "spent": 0
+    },
+    "projectManager": "68735f5c5a0c9e26bf98ab02",
+    "teamMembers": [
+      {
+        "user": "68735f5c5a0c9e26bf98ab02",
+        "role": "Lead",
+        "assignedDate": "2025-03-01T00:00:00.000Z",
+        "_id": "68736f95106bd7c4a2c9b2dc"
+      }
+    ],
+    "completionPercentage": 0,
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "materialsAllocated": [],
+    "milestones": [],
+    "documents": [],
+    "__v": 0,
+    "createdAt": "2025-07-13T08:34:29.866Z",
+    "updatedAt": "2025-07-13T08:34:29.866Z"
+  },
+  {
+    "_id": "68736f95106bd7c4a2c9b2dd",
+    "projectId": "PROJ-000004",
+    "projectName": "Power Quality Analyzer Upgrade",
+    "description": "Software and hardware upgrade for power quality analyzers",
+    "department": "PQ",
+    "projectType": "Development",
+    "status": "Completed",
+    "priority": "Medium",
+    "startDate": "2024-12-01T00:00:00.000Z",
+    "expectedEndDate": "2025-05-31T00:00:00.000Z",
+    "budget": {
+      "allocated": 800000,
+      "spent": 0
+    },
+    "projectManager": "68735f5c5a0c9e26bf98ab02",
+    "teamMembers": [
+      {
+        "user": "68735f5c5a0c9e26bf98ab02",
+        "role": "Lead",
+        "assignedDate": "2024-12-01T00:00:00.000Z",
+        "_id": "68736f95106bd7c4a2c9b2de"
+      }
+    ],
+    "completionPercentage": 0,
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "materialsAllocated": [],
+    "milestones": [],
+    "documents": [],
+    "__v": 0,
+    "createdAt": "2025-07-13T08:34:29.867Z",
+    "updatedAt": "2025-07-13T12:41:26.430Z",
+    "updatedBy": "68735f5c5a0c9e26bf98ab02"
+  },
+  {
+    "_id": "68736f95106bd7c4a2c9b2df",
+    "projectId": "PROJ-000005",
+    "projectName": "SMT Line Maintenance System",
+    "description": "Preventive maintenance tracking system for SMT production line",
+    "department": "SMT",
+    "projectType": "Maintenance",
+    "status": "Completed",
+    "priority": "Low",
+    "startDate": "2024-10-01T00:00:00.000Z",
+    "expectedEndDate": "2024-12-31T00:00:00.000Z",
+    "actualEndDate": "2024-12-20T00:00:00.000Z",
+    "budget": {
+      "allocated": 300000,
+      "spent": 285000
+    },
+    "projectManager": "68735f5c5a0c9e26bf98ab02",
+    "teamMembers": [
+      {
+        "user": "68735f5c5a0c9e26bf98ab02",
+        "role": "Lead",
+        "assignedDate": "2024-10-01T00:00:00.000Z",
+        "_id": "68736f95106bd7c4a2c9b2e0"
+      }
+    ],
+    "completionPercentage": 0,
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "materialsAllocated": [],
+    "milestones": [],
+    "documents": [],
+    "__v": 0,
+    "createdAt": "2025-07-13T08:34:29.867Z",
+    "updatedAt": "2025-07-13T08:34:29.867Z"
+  },
+  {
+    "_id": "6873aa01541a28baa7eb9181",
+    "projectId": "PRJ0006",
+    "projectName": "Mercedes Benzing",
+    "description": "Buy mercedes Benz and stay happy",
+    "department": "CT",
+    "projectType": "Development",
+    "status": "Completed",
+    "priority": "Medium",
+    "startDate": "2025-07-24T00:00:00.000Z",
+    "expectedEndDate": "2025-07-30T00:00:00.000Z",
+    "budget": {
+      "allocated": 1500000,
+      "spent": 0
+    },
+    "projectManager": "68735f5c5a0c9e26bf98ab02",
+    "completionPercentage": 0,
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "teamMembers": [],
+    "materialsAllocated": [],
+    "milestones": [],
+    "documents": [],
+    "createdAt": "2025-07-13T12:43:45.991Z",
+    "updatedAt": "2025-07-13T18:18:25.856Z",
+    "__v": 0,
+    "updatedBy": "68735f5c5a0c9e26bf98ab02"
+  }
+]

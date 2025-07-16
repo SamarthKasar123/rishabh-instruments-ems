@@ -1,0 +1,31 @@
+[
+  {
+    "_id": "6873dafab3a44af22210d8fe",
+    "taskId": "TASK-000001",
+    "title": "samisbac",
+    "description": "nothing person",
+    "taskType": "Documentation",
+    "priority": "High",
+    "status": "Completed",
+    "assignedTo": "68735f5c5a0c9e26bf98ab02",
+    "assignedBy": "68735f5c5a0c9e26bf98ab02",
+    "project": "6873aa01541a28baa7eb9181",
+    "department": "CT",
+    "dueDate": "2025-07-24T00:00:00.000Z",
+    "estimatedHours": 50,
+    "actualHours": 0,
+    "completionPercentage": 0,
+    "tags": [],
+    "isRecurring": false,
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "attachments": [],
+    "comments": [],
+    "dependencies": [],
+    "subtasks": [],
+    "createdAt": "2025-07-13T16:12:42.850Z",
+    "updatedAt": "2025-07-13T17:06:04.703Z",
+    "__v": 0,
+    "updatedBy": "68735f5c5a0c9e26bf98ab02"
+  }
+]

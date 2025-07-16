@@ -1,0 +1,170 @@
+[
+  {
+    "_id": "6873658ae85334963a553b9f",
+    "name": "Test Materialsss",
+    "description": "This is a test material",
+    "category": "Electronic Components",
+    "subCategory": "Test Components",
+    "unit": "pcs",
+    "quantityAvailable": 62,
+    "minStockLevel": 20,
+    "maxStockLevel": 200,
+    "unitPrice": 15.5,
+    "supplier": {
+      "name": "Test Supplier",
+      "contact": "+91-9876543210",
+      "email": "test@supplier.com",
+      "address": "Test Address"
+    },
+    "location": {
+      "warehouse": "WH-TEST",
+      "rack": "R-01",
+      "bin": "B-01"
+    },
+    "qualityGrade": "A",
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "lastUpdated": "2025-07-13T18:14:30.886Z",
+    "createdAt": "2025-07-13T07:51:38.637Z",
+    "updatedAt": "2025-07-13T18:14:30.889Z",
+    "serialNumber": "MAT-000001",
+    "__v": 0,
+    "expiryDate": null,
+    "specifications": {},
+    "updatedBy": "68735f5c5a0c9e26bf98ab02"
+  },
+  {
+    "_id": "687365e31348cca4431559c3",
+    "name": "Mercedes Benz s clas",
+    "description": "",
+    "category": "Packaging Materials",
+    "subCategory": "",
+    "unit": "pcs",
+    "quantityAvailable": 16,
+    "minStockLevel": 50,
+    "maxStockLevel": 57,
+    "unitPrice": 400,
+    "supplier": {
+      "name": "Mohanlala",
+      "contact": "",
+      "email": "",
+      "address": ""
+    },
+    "location": {
+      "warehouse": "",
+      "rack": "",
+      "bin": ""
+    },
+    "specifications": {},
+    "qualityGrade": "B",
+    "expiryDate": "2025-07-15T00:00:00.000Z",
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "lastUpdated": "2025-07-13T18:14:30.928Z",
+    "createdAt": "2025-07-13T07:53:07.849Z",
+    "updatedAt": "2025-07-13T18:14:30.928Z",
+    "serialNumber": "MAT-000002",
+    "__v": 0,
+    "updatedBy": "68735f5c5a0c9e26bf98ab02"
+  },
+  {
+    "_id": "687369b11348cca443155ac7",
+    "name": "Srk",
+    "description": "",
+    "category": "Tools & Equipment",
+    "subCategory": "",
+    "unit": "ml",
+    "quantityAvailable": 300,
+    "minStockLevel": 10,
+    "maxStockLevel": 100,
+    "unitPrice": 500,
+    "supplier": {
+      "name": "mkc",
+      "contact": "",
+      "email": "",
+      "address": ""
+    },
+    "location": {
+      "warehouse": "",
+      "rack": "",
+      "bin": ""
+    },
+    "specifications": {},
+    "qualityGrade": "A",
+    "expiryDate": null,
+    "isActive": false,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "lastUpdated": "2025-07-13T08:09:21.991Z",
+    "createdAt": "2025-07-13T08:09:21.993Z",
+    "updatedAt": "2025-07-13T08:16:22.184Z",
+    "serialNumber": "MAT-000003",
+    "__v": 0,
+    "updatedBy": "68735f5c5a0c9e26bf98ab02"
+  },
+  {
+    "_id": "6873e42f4e2bc2e6a3241376",
+    "name": "Samy",
+    "description": "",
+    "category": "Tools & Equipment",
+    "subCategory": "",
+    "unit": "pcs",
+    "quantityAvailable": 5,
+    "minStockLevel": 10,
+    "maxStockLevel": 100,
+    "unitPrice": 160,
+    "supplier": {
+      "name": "sham pvt ltd",
+      "contact": "",
+      "email": "",
+      "address": ""
+    },
+    "location": {
+      "warehouse": "",
+      "rack": "",
+      "bin": ""
+    },
+    "specifications": {},
+    "qualityGrade": "B",
+    "expiryDate": "2025-07-31T00:00:00.000Z",
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "lastUpdated": "2025-07-13T16:51:59.426Z",
+    "createdAt": "2025-07-13T16:51:59.435Z",
+    "updatedAt": "2025-07-13T16:51:59.435Z",
+    "serialNumber": "MAT-000004",
+    "__v": 0
+  },
+  {
+    "_id": "6873e7bf1818130d6427bae9",
+    "name": "car",
+    "description": "",
+    "category": "Packaging Materials",
+    "subCategory": "",
+    "unit": "pcs",
+    "quantityAvailable": 1,
+    "minStockLevel": 15,
+    "maxStockLevel": 100,
+    "unitPrice": 10000,
+    "supplier": {
+      "name": "swiggy",
+      "contact": "",
+      "email": "",
+      "address": ""
+    },
+    "location": {
+      "warehouse": "",
+      "rack": "",
+      "bin": ""
+    },
+    "specifications": {},
+    "qualityGrade": "A",
+    "expiryDate": "2025-07-17T00:00:00.000Z",
+    "isActive": true,
+    "createdBy": "68735f5c5a0c9e26bf98ab02",
+    "lastUpdated": "2025-07-13T17:07:11.894Z",
+    "createdAt": "2025-07-13T17:07:11.898Z",
+    "updatedAt": "2025-07-13T17:07:11.898Z",
+    "serialNumber": "MAT-000005",
+    "__v": 0
+  }
+]
